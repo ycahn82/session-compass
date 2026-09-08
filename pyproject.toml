@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [
-    { name = "12signal", email = "pavbyte@gmail.com" }
+    { name = "Yeonchan Ahn", email = "ahnyeonchan@gmail.com" }
 ]
 keywords = ["cli", "coding-agents", "claude-code", "codex", "copilot", "antigravity", "sessions", "resume"]
 classifiers = [
