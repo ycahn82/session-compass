@@ -37,6 +37,8 @@ def count_steps(db_file: Path) -> int:
 
 class AntigravityAdapter:
     name = "agy"
+    executable = "agy"
+    required_help_flags = ("--conversation", "--dangerously-skip-permissions")
 
     def check_storage_contract(self, path: Path) -> ContractReport:
         try:

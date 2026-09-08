@@ -14,6 +14,8 @@ COPILOT_DB_FILE = HOME / ".copilot" / "session-store.db"
 
 class CopilotAdapter:
     name = "copilot"
+    executable = "copilot"
+    required_help_flags = ("--resume", "--allow-all")
 
     def check_storage_contract(self, path: Path) -> ContractReport:
         required = {

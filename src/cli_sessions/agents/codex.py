@@ -36,6 +36,8 @@ def find_codex_state_db() -> Optional[Path]:
 
 class CodexAdapter:
     name = "codex"
+    executable = "codex"
+    required_help_flags = ("resume", "--dangerously-bypass-approvals-and-sandbox")
 
     def check_storage_contract(self, path: Path) -> ContractReport:
         required = {

@@ -20,6 +20,8 @@ CLAUDE_PROJECTS_DIR = HOME / ".claude" / "projects"
 
 class ClaudeAdapter:
     name = "claude"
+    executable = "claude"
+    required_help_flags = ("--resume", "--dangerously-skip-permissions")
 
     def check_storage_contract(self, path: Path) -> ContractReport:
         records = read_jsonl_lines(path)

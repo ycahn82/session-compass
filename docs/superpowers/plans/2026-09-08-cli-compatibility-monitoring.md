@@ -507,7 +507,7 @@ git commit -m "feat: map dangerous resume flags per agent"
 - Consumes: 각 adapter의 `version_command()`, `help_commands()`, Task 5의 fixture/contract 규칙
 - Produces: `compatibility-report.json` with agent/version/capability/status/failure fields
 
-- [ ] **Step 1: fake executable 기반 probe 실패 테스트 작성**
+- [x] **Step 1: fake executable 기반 probe 실패 테스트 작성**
 
 임시 executable이 `--version`과 help 명령에 정해진 stdout을 반환하도록 만들고, probe가 실제 model 호출 없이 결과를 생성하는지 검증한다.
 
@@ -518,19 +518,19 @@ assert result["resume"] is True
 assert result["dangerous_resume"] is True
 ```
 
-- [ ] **Step 2: probe runner 구현**
+- [x] **Step 2: probe runner 구현**
 
 각 subprocess 호출에 timeout을 적용하고 stdout/stderr에서 session ID, prompt, 경로처럼 민감할 수 있는 값을 report에 복사하지 않는다. non-zero exit와 timeout은 agent별 실패로 저장하고 다른 agent 검사를 계속한다.
 
-- [ ] **Step 3: 최신 version/help contract 연결**
+- [x] **Step 3: 최신 version/help contract 연결**
 
 최신 CLI의 version/help를 adapter 규칙으로 검사한다. `max_version` 비교는 하지 않고, required resume/native dangerous option 존재 여부와 storage contract fixture 검증 결과를 기록한다.
 
-- [ ] **Step 4: report sanitizer 구현**
+- [x] **Step 4: report sanitizer 구현**
 
 `build_compatibility_report.py`는 version, detected flags, failure reason, bounded help excerpt, commit SHA만 출력한다. 사용자 home 절대 경로, API key 패턴, UUID session ID, prompt 내용은 제거한다.
 
-- [ ] **Step 5: probe unit test 실행**
+- [x] **Step 5: probe unit test 실행**
 
 Run: `PYTHONPATH=src python -m unittest tests.test_compatibility_probe -v`
 

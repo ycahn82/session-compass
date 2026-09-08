@@ -51,6 +51,8 @@ class ResumeStatus(Enum):
 @runtime_checkable
 class AgentAdapter(Protocol):
     name: str
+    executable: str
+    required_help_flags: tuple[str, str]
 
     def collect_sessions(self) -> list[dict[str, Any]]:
         ...
