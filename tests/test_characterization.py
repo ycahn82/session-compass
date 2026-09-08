@@ -89,9 +89,35 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
         agy_cache = self.agy_dir / "cache"
         agy_cache.mkdir()
         (agy_cache / "conversation_metadata.json").write_text(
-            json.dumps({"conversations": {"agy-id": {"summary": {}}}}),
+            json.dumps({"conversations": {"agy-id": {"is_internal": False}}}),
             encoding="utf-8",
         )
+        self.agy_summaries = self.agy_dir / "conversation_summaries.db"
+        with sqlite3.connect(self.agy_summaries) as connection:
+            connection.execute(
+                """
+                CREATE TABLE conversation_summaries (
+                    conversation_id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL DEFAULT '',
+                    preview TEXT NOT NULL DEFAULT '',
+                    step_count INTEGER NOT NULL DEFAULT 0,
+                    last_modified_time TEXT NOT NULL,
+                    workspace_uris TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                "INSERT INTO conversation_summaries VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    "agy-id",
+                    "Antigravity task",
+                    "",
+                    1,
+                    "2026-09-08T01:02:03Z",
+                    json.dumps([f"file://{self.root / 'workspace'}"]),
+                ),
+            )
+        connection.close()
 
         self.copilot_db = self.root / "copilot.db"
         with sqlite3.connect(self.copilot_db) as connection:
@@ -125,6 +151,7 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
             patch.object(antigravity, "AGY_CONVERSATIONS_DIR", self.agy_conversations),
             patch.object(antigravity, "AGY_HISTORY_FILE", self.agy_dir / "history.jsonl"),
             patch.object(antigravity, "AGY_METADATA_FILE", agy_cache / "conversation_metadata.json"),
+            patch.object(antigravity, "AGY_SUMMARIES_DB", self.agy_summaries),
             patch.object(copilot, "COPILOT_DB_FILE", self.copilot_db),
         ]
         for active_patch in self.patches:

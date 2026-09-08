@@ -21,6 +21,7 @@ AGY_DIR = HOME / ".gemini" / "antigravity-cli"
 AGY_CONVERSATIONS_DIR = AGY_DIR / "conversations"
 AGY_HISTORY_FILE = AGY_DIR / "history.jsonl"
 AGY_METADATA_FILE = AGY_DIR / "cache" / "conversation_metadata.json"
+AGY_SUMMARIES_DB = AGY_DIR / "conversation_summaries.db"
 
 
 def count_steps(db_file: Path) -> int:
@@ -33,6 +34,48 @@ def count_steps(db_file: Path) -> int:
         return int(row[0]) if row else 0
     except sqlite3.Error:
         return 0
+
+
+def read_summary_catalog(path: Path) -> dict[str, dict[str, Any]]:
+    """Read Antigravity's user-facing conversation catalog without writing to it."""
+    try:
+        connection = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
+        try:
+            rows = connection.execute(
+                """
+                SELECT conversation_id, title, preview, workspace_uris, last_modified_time
+                FROM conversation_summaries
+                """
+            ).fetchall()
+        finally:
+            connection.close()
+    except (OSError, sqlite3.Error):
+        return {}
+
+    catalog: dict[str, dict[str, Any]] = {}
+    for conversation_id, title, preview, workspace_uris, last_modified_time in rows:
+        try:
+            parsed_workspaces = json.loads(workspace_uris or "[]")
+        except (TypeError, json.JSONDecodeError):
+            parsed_workspaces = []
+        if not isinstance(parsed_workspaces, list):
+            parsed_workspaces = []
+        catalog[str(conversation_id)] = {
+            "title": str(title or "").strip(),
+            "preview": str(preview or "").strip(),
+            "workspace_uris": [str(value) for value in parsed_workspaces if value],
+            "last_modified_time": last_modified_time,
+        }
+    return catalog
+
+
+def read_conversation_metadata(path: Path) -> dict[str, dict[str, Any]]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return {}
+    conversations = data.get("conversations", {}) if isinstance(data, dict) else {}
+    return conversations if isinstance(conversations, dict) else {}
 
 
 class AntigravityAdapter:
@@ -74,30 +117,40 @@ class AntigravityAdapter:
             if timestamp and (not record.get("last_active") or timestamp > record["last_active"]):
                 record["last_active"] = timestamp
 
-        try:
-            metadata = json.loads(AGY_METADATA_FILE.read_text(encoding="utf-8")).get("conversations", {})
-        except (OSError, json.JSONDecodeError, AttributeError):
-            metadata = {}
+        metadata = read_conversation_metadata(AGY_METADATA_FILE)
+        catalog = read_summary_catalog(AGY_SUMMARIES_DB)
 
         for db_file in AGY_CONVERSATIONS_DIR.glob("*.db"):
             if count_steps(db_file) == 0:
                 continue
             session_id = db_file.stem
+            catalog_record = catalog.get(session_id)
+            if not catalog_record or metadata.get(session_id, {}).get("is_internal") is True:
+                continue
             history = from_history.get(session_id, {})
-            meta = metadata.get(session_id, {}).get("summary", {}) if isinstance(metadata, dict) else {}
-            workspace_uris = meta.get("WorkspaceURIs", []) if isinstance(meta, dict) else []
-            cwd = history.get("workspace") or (
+            workspace_uris = catalog_record["workspace_uris"]
+            cwd = (
                 workspace_uris[0].removeprefix("file://") if workspace_uris else None
+            ) or history.get("workspace")
+            last_active = (
+                parse_timestamp(
+                    history.get("last_active") or catalog_record.get("last_modified_time")
+                )
+                or file_mtime(db_file)
             )
-            last_active = parse_timestamp(history.get("last_active") or meta.get("UpdatedAt")) or file_mtime(db_file)
+            summary = catalog_record["title"] or catalog_record["preview"]
+            if not summary or not cwd:
+                continue
             session = {
-                    "tool": self.name,
-                    "id": session_id,
-                    "cwd": cwd or "(unknown)",
-                    "summary": history.get("summary") or meta.get("Preview") or "(no summary available)",
-                    "last_active": last_active,
+                "tool": self.name,
+                "id": session_id,
+                "cwd": cwd,
+                "summary": summary,
+                "last_active": last_active,
                 "record_kind": "conversation",
                 "has_conversation_content": True,
+                "summary_source": "catalog_title" if catalog_record["title"] else "catalog_preview",
+                "workspace_source": "catalog_workspace_uri" if workspace_uris else "history_workspace",
             }
             session["resume_status"] = classify_resumability(session).value
             sessions.append(session)

@@ -60,6 +60,7 @@ class AntigravityMetadataTests(unittest.TestCase):
                     ),
                 ],
             )
+        connection.close()
         self._write_conversation("user-with-title")
         self._write_conversation("user-with-preview")
         self._write_conversation("internal-session")
@@ -96,6 +97,7 @@ class AntigravityMetadataTests(unittest.TestCase):
         with sqlite3.connect(path) as connection:
             connection.execute("CREATE TABLE steps (idx INTEGER PRIMARY KEY)")
             connection.execute("INSERT INTO steps VALUES (1)")
+        connection.close()
 
     def test_uses_ui_title_then_preview_for_user_sessions(self):
         sessions = antigravity.AntigravityAdapter().collect_sessions()
