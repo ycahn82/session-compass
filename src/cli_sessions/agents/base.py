@@ -33,6 +33,14 @@ class CapabilityReport:
     detected_flags: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class ContractReport:
+    agent: str
+    ok: bool
+    missing: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
+
+
 class ResumeStatus(Enum):
     RESUMABLE = "resumable"
     LIKELY_RESUMABLE = "likely_resumable"
@@ -51,6 +59,9 @@ class AgentAdapter(Protocol):
         ...
 
     def compatibility(self) -> AgentCompatibility:
+        ...
+
+    def check_storage_contract(self, path: Path) -> ContractReport:
         ...
 
 

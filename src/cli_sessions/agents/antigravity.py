@@ -5,7 +5,15 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .base import AgentAdapter, AgentCompatibility, classify_resumability, file_mtime, parse_timestamp, read_jsonl_lines
+from .base import (
+    AgentAdapter,
+    AgentCompatibility,
+    ContractReport,
+    classify_resumability,
+    file_mtime,
+    parse_timestamp,
+    read_jsonl_lines,
+)
 
 
 HOME = Path.home()
@@ -29,6 +37,21 @@ def count_steps(db_file: Path) -> int:
 
 class AntigravityAdapter:
     name = "agy"
+
+    def check_storage_contract(self, path: Path) -> ContractReport:
+        try:
+            connection = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
+            try:
+                rows = connection.execute("PRAGMA table_info(steps)").fetchall()
+            finally:
+                connection.close()
+        except (OSError, sqlite3.Error):
+            return ContractReport(self.name, False, ("steps",))
+        if not rows:
+            return ContractReport(self.name, False, ("steps",))
+        columns = {row[1] for row in rows}
+        missing = ("steps.idx",) if "idx" not in columns else ()
+        return ContractReport(self.name, not missing, missing)
 
     def collect_sessions(self) -> list[dict[str, Any]]:
         sessions = []

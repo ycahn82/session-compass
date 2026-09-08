@@ -64,6 +64,7 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
                     0,
                 ),
             )
+        connection.close()
 
         self.agy_dir = self.root / "agy"
         self.agy_conversations = self.agy_dir / "conversations"
@@ -72,6 +73,7 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
         with sqlite3.connect(self.agy_db) as connection:
             connection.execute("CREATE TABLE steps (idx INTEGER PRIMARY KEY)")
             connection.execute("INSERT INTO steps VALUES (1)")
+        connection.close()
         (self.agy_dir / "history.jsonl").write_text(
             json.dumps(
                 {
@@ -112,6 +114,7 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
                 "INSERT INTO turns VALUES (?, ?, ?)",
                 ("copilot-id", "First Copilot message", 0),
             )
+        connection.close()
 
         self.patches = [
             patch.object(claude, "CLAUDE_PROJECTS_DIR", self.root / "claude"),

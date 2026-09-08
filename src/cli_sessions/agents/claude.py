@@ -6,6 +6,7 @@ from typing import Any
 from .base import (
     AgentAdapter,
     AgentCompatibility,
+    ContractReport,
     classify_resumability,
     file_mtime,
     parse_timestamp,
@@ -19,6 +20,13 @@ CLAUDE_PROJECTS_DIR = HOME / ".claude" / "projects"
 
 class ClaudeAdapter:
     name = "claude"
+
+    def check_storage_contract(self, path: Path) -> ContractReport:
+        records = read_jsonl_lines(path)
+        if not records:
+            return ContractReport(self.name, False, ("jsonl",))
+        missing = () if all("type" in record for record in records) else ("type",)
+        return ContractReport(self.name, not missing, missing)
 
     def collect_sessions(self) -> list[dict[str, Any]]:
         sessions = []

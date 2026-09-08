@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .base import AgentAdapter, AgentCompatibility, classify_resumability, parse_timestamp
+from .base import AgentAdapter, AgentCompatibility, ContractReport, classify_resumability, parse_timestamp
 
 
 HOME = Path.home()
@@ -14,6 +14,29 @@ COPILOT_DB_FILE = HOME / ".copilot" / "session-store.db"
 
 class CopilotAdapter:
     name = "copilot"
+
+    def check_storage_contract(self, path: Path) -> ContractReport:
+        required = {
+            "sessions": {"id", "cwd", "summary", "updated_at"},
+            "turns": {"session_id", "user_message", "turn_index"},
+        }
+        try:
+            connection = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
+            try:
+                missing = []
+                for table, columns in required.items():
+                    rows = connection.execute(f"PRAGMA table_info({table})").fetchall()
+                    if not rows:
+                        missing.append(table)
+                        continue
+                    available = {row[1] for row in rows}
+                    missing.extend(f"{table}.{column}" for column in sorted(columns - available))
+            finally:
+                connection.close()
+        except (OSError, sqlite3.Error):
+            return ContractReport(self.name, False, ("sessions", "turns"))
+        missing_tuple = tuple(missing)
+        return ContractReport(self.name, not missing_tuple, missing_tuple)
 
     def collect_sessions(self) -> list[dict[str, Any]]:
         if not COPILOT_DB_FILE.is_file():

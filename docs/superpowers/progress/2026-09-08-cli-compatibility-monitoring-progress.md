@@ -16,8 +16,8 @@
 |---|---|---|
 | Task 1: characterization tests | completed | Commit `f846c9a`; characterization baseline and resume command expectations are recorded |
 | Task 2: service modules | completed | Commit `ac56788`; service modules, registry, and behavior-preserving CLI orchestration are isolated |
-| Task 3: resumability filtering | completed | Commit pending; 9-test suite PASS including Claude bridge-session, metadata-only, invalid Codex, and opt-in diagnostics |
-| Task 4: storage contracts | pending | - |
+| Task 3: resumability filtering | completed | Commit `acc6127`; 9-test suite PASS including Claude bridge-session, metadata-only, invalid Codex, and opt-in diagnostics |
+| Task 4: storage contracts | completed | Commit pending; read-only schema checks pass for Claude, Codex, AGY, and Copilot |
 | Task 5: version floors | pending | - |
 | Task 6: dangerous resume | pending | - |
 | Task 7: compatibility probe | pending | - |
@@ -43,3 +43,7 @@
 - Task 3 RED test confirmed the resumability API was absent before implementation.
 - Task 3 verification: `PYTHONPATH=src python -m unittest discover -s tests -v` -> 9 tests PASS.
 - Task 3 hides `metadata_only` and `invalid` records by default and supports `--include-unverified` diagnostics.
+- Task 3 committed as `acc6127`.
+- Task 4 RED test confirmed `ContractReport` and adapter contract methods were absent before implementation.
+- Task 4 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src python -m unittest discover -s tests -v` -> 11 tests PASS with no resource warnings.
+- Task 4 uses temporary synthetic JSONL/SQLite schemas; all SQLite contract probes are read-only and explicitly close connections.

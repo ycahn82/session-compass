@@ -334,7 +334,7 @@ git commit -m "feat: show only resumable session candidates by default"
 - Consumes: Task 2의 서비스별 `collect_sessions()`와 Task 3의 resumability 상태
 - Produces: 서비스별 필수 storage contract를 확인하는 `check_storage_contract(path) -> ContractReport`
 
-- [ ] **Step 1: fixture 기반 contract 실패 테스트 작성**
+- [x] **Step 1: fixture 기반 contract 실패 테스트 작성**
 
 각 서비스 fixture에서 필수 table/field를 하나씩 제거한 변형을 만들고, missing required field가 `ContractReport(ok=False, missing=...)`를 반환하는지 검증한다. 테스트는 실제 사용자 DB를 절대 변경하지 않는다.
 
@@ -344,11 +344,11 @@ assert report.ok is False
 assert "threads.updated_at_ms" in report.missing
 ```
 
-- [ ] **Step 2: 정상 fixture contract 테스트 작성**
+- [x] **Step 2: 정상 fixture contract 테스트 작성**
 
 Claude는 JSONL 필드, Codex는 `threads`, Antigravity는 `steps`, Copilot은 `sessions`와 `turns`의 필수 column을 검증한다. optional field가 없는 fixture는 warning으로 처리하고 `ok=True`를 유지한다.
 
-- [ ] **Step 3: read-only schema probe 구현**
+- [x] **Step 3: read-only schema probe 구현**
 
 SQLite는 다음 형태로만 연다.
 
@@ -358,11 +358,11 @@ sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
 
 `PRAGMA` 또는 `SELECT`는 metadata 확인에만 사용하고 `CREATE`, `ALTER`, `INSERT`, `UPDATE`, `DELETE`를 호출하지 않는다. JSONL은 읽기만 수행한다.
 
-- [ ] **Step 4: collector의 optional/missing field 동작 검증**
+- [x] **Step 4: collector의 optional/missing field 동작 검증**
 
 optional field가 없는 legacy fixture에서 빈 summary 또는 file mtime fallback이 기존 contract대로 동작하는지 테스트한다. required table/field가 없는 경우에는 해당 adapter가 빈 session 목록과 진단 가능한 contract report를 반환하도록 한다.
 
-- [ ] **Step 5: storage contract test 실행**
+- [x] **Step 5: storage contract test 실행**
 
 Run: `PYTHONPATH=src python -m unittest tests.agents.test_storage_contracts -v`
 

@@ -5,7 +5,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from .base import AgentAdapter, AgentCompatibility, classify_resumability, parse_timestamp, read_jsonl_lines
+from .base import (
+    AgentAdapter,
+    AgentCompatibility,
+    ContractReport,
+    classify_resumability,
+    parse_timestamp,
+    read_jsonl_lines,
+)
 
 
 HOME = Path.home()
@@ -29,6 +36,31 @@ def find_codex_state_db() -> Optional[Path]:
 
 class CodexAdapter:
     name = "codex"
+
+    def check_storage_contract(self, path: Path) -> ContractReport:
+        required = {
+            "id",
+            "cwd",
+            "title",
+            "first_user_message",
+            "preview",
+            "updated_at_ms",
+            "updated_at",
+            "archived",
+        }
+        try:
+            connection = sqlite3.connect(f"file:{path.resolve()}?mode=ro", uri=True)
+            try:
+                rows = connection.execute("PRAGMA table_info(threads)").fetchall()
+            finally:
+                connection.close()
+        except (OSError, sqlite3.Error):
+            return ContractReport(self.name, False, ("threads",))
+        if not rows:
+            return ContractReport(self.name, False, ("threads",))
+        columns = {row[1] for row in rows}
+        missing = tuple(f"threads.{column}" for column in sorted(required - columns))
+        return ContractReport(self.name, not missing, missing)
 
     def collect_state_sessions(self) -> list[dict[str, Any]]:
         state_db = find_codex_state_db()
