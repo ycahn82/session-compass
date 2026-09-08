@@ -23,6 +23,47 @@
 - GitHub Actions 권한은 `contents: read`, `issues: write`만 사용한다.
 - Issue와 workflow artifact에 API key, session ID, 사용자 prompt, 전체 경로를 기록하지 않는다.
 
+## 개발 브랜치와 실행 workspace
+
+- 기준 checkout은 `/home/ycahn/tools/cli-sessions`이다.
+- 현재 기준 branch는 `main`이며, 구현 기준 commit은 `daf4662`이다.
+- `main`에서 직접 구현하지 않고 `feat/cli-compatibility-monitoring` branch를 만든다.
+- 구현 worktree는 `/home/ycahn/tools/cli-sessions-compatibility`로 만든다.
+- 모든 source, fixture, unit test, package build는 구현 worktree에서 실행한다.
+- `/home/ycahn/codes/Quote`와 `/home/ycahn/codes/PPLL`은 이 작업의 대상이 아니며 읽거나 수정하지 않는다.
+- 구현 시작 전 다음 명령으로 branch/worktree를 확인한다.
+
+```bash
+git -C /home/ycahn/tools/cli-sessions status --short --branch
+git -C /home/ycahn/tools/cli-sessions worktree add -b feat/cli-compatibility-monitoring /home/ycahn/tools/cli-sessions-compatibility main
+git -C /home/ycahn/tools/cli-sessions-compatibility status --short --branch
+```
+
+- 실제 사용자 `~/.claude`, `~/.codex`, `~/.gemini`, `~/.copilot` storage는 unit test 입력으로 사용하지 않는다.
+- local test는 temporary directory와 repository fixture만 사용한다.
+- 실제 설치된 service CLI는 local에서 `--version`/`--help` 확인이 필요한 경우에만 읽기 방식으로 호출하며, `--resume`, model request, login, session creation은 실행하지 않는다.
+- 최신 service CLI 설치와 version/help integration check는 GitHub Actions Ubuntu runner에서만 수행한다.
+
+## 테스트 실행 위치와 검증 경계
+
+| 검증 종류 | 실행 위치 | 입력 | 금지 사항 |
+|---|---|---|---|
+| characterization/unit test | `/home/ycahn/tools/cli-sessions-compatibility` | temporary directory, committed fixture | 사용자 home storage 사용 금지 |
+| storage contract test | 구현 worktree | synthetic JSONL/SQLite fixture | 실제 DB migration/write 금지 |
+| command builder test | 구현 worktree | fake executable 또는 mocked subprocess | 실제 agent 실행 금지 |
+| package build | 구현 worktree | local source tree | 다른 workspace 파일 참조 금지 |
+| latest CLI compatibility | GitHub Actions runner | 최신 공개 CLI의 `--version`/`--help` | login, model 호출, 실제 resume 금지 |
+
+로컬 unit test의 표준 실행 명령은 다음과 같다.
+
+```bash
+cd /home/ycahn/tools/cli-sessions-compatibility
+PYTHONPATH=src python -m unittest discover -s tests -v
+python3 -m pip wheel --no-deps --no-build-isolation . -w /tmp/cli-sessions-wheel
+```
+
+각 task의 commit은 `feat/cli-compatibility-monitoring` branch에 생성하고, `main`에는 직접 commit하지 않는다.
+
 ---
 
 ## 파일 구조
