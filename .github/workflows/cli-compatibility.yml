@@ -21,6 +21,10 @@ jobs:
         with:
           node-version: 20
 
+      - name: Run unit and metadata regression tests
+        shell: bash
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+
       - name: Install latest public agent CLIs
         shell: bash
         run: |

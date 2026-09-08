@@ -73,3 +73,14 @@
 - PR validation commit `0961070` triggered GitHub Actions run `34202513868` on PR #1.
 - Live PR run passed in 26 seconds; downloaded sanitized artifact confirmed Claude `2.1.197`, Codex `0.153.4`, AGY `1.1.27`, and Copilot `1.0.83` all reported `resume=true` and `dangerous_resume=true`.
 - Live run emitted only a GitHub runner annotation that actions were forced from Node 20 to Node 24; job conclusion was successful.
+
+## AGY user-session metadata follow-up
+
+- Investigation confirmed that `conversation_summaries.db` is the Antigravity UI catalog. `title` is the primary user-facing title, `preview` is the fallback, and `workspace_uris` is the primary workspace source.
+- The current server had 15 AGY conversation DBs, but only 4 cataloged user sessions; 11 were marked internal or had no user-facing catalog row.
+- Plan: `docs/superpowers/plans/2026-09-08-agy-session-metadata-filtering.md`.
+- Task 1 committed as `3198b16`; failing tests reproduced missing title and internal-session leakage.
+- Task 2 committed as `ec365fe`; AGY now reads the user catalog read-only, excludes internal/uncatalogued sessions, and uses title/preview plus catalog workspace.
+- Task 2 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 28 tests PASS.
+- Task 3 committed as `c45e55e`; diagnostic non-resumable records are blocked from invoking an external agent.
+- Task 3 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 29 tests PASS.
