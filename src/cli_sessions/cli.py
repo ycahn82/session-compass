@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .agents.base import ResumeStatus, classify_resumability, filter_resume_candidates
 from .agents.registry import get_adapter, get_adapters
 
 
@@ -75,11 +76,21 @@ def main() -> None:
     filters.add_argument("--codex", action="store_const", const="codex", dest="tool")
     filters.add_argument("--agy", action="store_const", const="agy", dest="tool")
     filters.add_argument("--copilot", action="store_const", const="copilot", dest="tool")
+    parser.add_argument(
+        "--include-unverified",
+        action="store_true",
+        help="Include sessions without verified resume evidence",
+    )
     args = parser.parse_args()
 
     sessions = [session for adapter in get_adapters() for session in adapter.collect_sessions()]
     if args.tool:
         sessions = [session for session in sessions if session["tool"] == args.tool]
+    visible_sessions = filter_resume_candidates(sessions, include_unverified=args.include_unverified)
+    hidden_count = len(sessions) - len(visible_sessions)
+    sessions = visible_sessions
+    if hidden_count and not args.include_unverified:
+        print(f"{hidden_count} unverified sessions hidden. Use --include-unverified to inspect them.")
     sessions.sort(key=lambda session: session["last_active"])
     if not sessions:
         print("No sessions found.")
@@ -93,6 +104,10 @@ def main() -> None:
             f"{index:>{index_width}}) [{session['tool']:<7}] {format_relative_time(session['last_active']):<9} "
             f"{project:<32} {truncate(session['summary'], 70)}"
         )
+        if args.include_unverified:
+            status = classify_resumability(session)
+            if status not in {ResumeStatus.RESUMABLE, ResumeStatus.LIKELY_RESUMABLE}:
+                print(f"{' ' * (index_width + 2)}status: {status.value}")
         print(f"{' ' * (index_width + 2)}id: {session['id']}")
     print()
 

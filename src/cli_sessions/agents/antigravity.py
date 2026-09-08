@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .base import AgentAdapter, AgentCompatibility, file_mtime, parse_timestamp, read_jsonl_lines
+from .base import AgentAdapter, AgentCompatibility, classify_resumability, file_mtime, parse_timestamp, read_jsonl_lines
 
 
 HOME = Path.home()
@@ -65,22 +65,21 @@ class AntigravityAdapter:
                 workspace_uris[0].removeprefix("file://") if workspace_uris else None
             )
             last_active = parse_timestamp(history.get("last_active") or meta.get("UpdatedAt")) or file_mtime(db_file)
-            sessions.append(
-                {
+            session = {
                     "tool": self.name,
                     "id": session_id,
                     "cwd": cwd or "(unknown)",
                     "summary": history.get("summary") or meta.get("Preview") or "(no summary available)",
                     "last_active": last_active,
-                }
-            )
+                "record_kind": "conversation",
+                "has_conversation_content": True,
+            }
+            session["resume_status"] = classify_resumability(session).value
+            sessions.append(session)
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        command = ["agy"]
-        if dangerous:
-            command.append("--dangerously-skip-permissions")
-        return command + ["--conversation", session_id]
+        return ["agy", "--conversation", session_id]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "unknown", "unknown")

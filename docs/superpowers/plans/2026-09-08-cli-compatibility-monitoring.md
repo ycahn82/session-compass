@@ -255,7 +255,7 @@ git commit -m "refactor: split agent session integrations by service"
 - Consumes: Task 2의 서비스별 adapter와 `list[dict[str, Any]]` session record
 - Produces: `ResumeStatus`, `classify_resumability(session) -> ResumeStatus`, `filter_resume_candidates(sessions, include_unverified) -> list[dict[str, Any]]`
 
-- [ ] **Step 1: 서비스별 resumability 실패 테스트 작성**
+- [x] **Step 1: 서비스별 resumability 실패 테스트 작성**
 
 다음 record를 기본 목록에서 제외하는 테스트를 먼저 작성한다.
 
@@ -267,7 +267,7 @@ assert classify_resumability({"tool": "codex", "id": "id", "has_rollout": False}
 
 AGY의 summary가 비어 있어도 DB와 유효한 activity record가 있는 session은 숨기지 않는다.
 
-- [ ] **Step 2: resumability 상태와 provenance 타입 구현**
+- [x] **Step 2: resumability 상태와 provenance 타입 구현**
 
 `base.py`에 다음 enum과 내부 필드를 추가한다.
 
@@ -281,15 +281,15 @@ class ResumeStatus(Enum):
 
 session record에는 `resume_status`, `record_kind`, `summary_source`를 추가하되 기존 표시용 필드는 유지한다.
 
-- [ ] **Step 3: Claude bridge-session 판정 구현**
+- [x] **Step 3: Claude bridge-session 판정 구현**
 
 `type == "bridge-session"`이고 user/assistant conversation record가 없는 JSONL은 `METADATA_ONLY`로 분류한다. 실제 conversation record가 있거나 검증된 Remote Control session 정보가 있으면 `RESUMABLE` 또는 `LIKELY_RESUMABLE`로 분류한다.
 
-- [ ] **Step 4: Codex, AGY, Copilot evidence 판정 구현**
+- [x] **Step 4: Codex, AGY, Copilot evidence 판정 구현**
 
 Codex는 `threads` row와 연결된 rollout artifact를 확인한다. AGY는 conversation DB와 유효한 `steps` row를 확인하되, `steps` count를 summary로 사용하지 않는다. Copilot은 `sessions` row와 ID를 확인한다.
 
-- [ ] **Step 5: 기본 filter와 진단 option 구현**
+- [x] **Step 5: 기본 filter와 진단 option 구현**
 
 `cli.py`에 `--include-unverified`를 추가한다. 기본값은 `False`이며 `RESUMABLE`, `LIKELY_RESUMABLE`만 목록에 남긴다. 옵션이 켜지면 `METADATA_ONLY`, `INVALID`도 표시하고 각 row에 상태를 표시한다.
 
@@ -299,7 +299,7 @@ Codex는 `threads` row와 연결된 rollout artifact를 확인한다. AGY는 con
 2 unverified sessions hidden. Use --include-unverified to inspect them.
 ```
 
-- [ ] **Step 6: resumability test 실행**
+- [x] **Step 6: resumability test 실행**
 
 Run: `PYTHONPATH=src python -m unittest tests.agents.test_resumability -v`
 

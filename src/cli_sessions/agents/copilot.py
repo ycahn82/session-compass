@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .base import AgentAdapter, AgentCompatibility, parse_timestamp
+from .base import AgentAdapter, AgentCompatibility, classify_resumability, parse_timestamp
 
 
 HOME = Path.home()
@@ -41,23 +41,22 @@ class CopilotAdapter:
         sessions = []
         for session_id, cwd, summary, updated_at in sessions_rows:
             first_message = first_messages.get(session_id)
-            sessions.append(
-                {
+            session = {
                     "tool": self.name,
                     "id": str(session_id),
                     "cwd": cwd or "(unknown)",
                     "summary": first_message or summary or "(no summary available)",
                     "last_active": parse_timestamp(updated_at)
                     or datetime.fromtimestamp(0, tz=timezone.utc),
+                    "record_kind": "conversation",
+                    "has_session_record": True,
                 }
-            )
+            session["resume_status"] = classify_resumability(session).value
+            sessions.append(session)
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        command = ["copilot"]
-        if dangerous:
-            command.append("--allow-all")
-        return command + [f"--resume={session_id}"]
+        return ["copilot", f"--resume={session_id}"]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "unknown", "unknown")

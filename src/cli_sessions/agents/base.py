@@ -33,6 +33,13 @@ class CapabilityReport:
     detected_flags: tuple[str, ...]
 
 
+class ResumeStatus(Enum):
+    RESUMABLE = "resumable"
+    LIKELY_RESUMABLE = "likely_resumable"
+    METADATA_ONLY = "metadata_only"
+    INVALID = "invalid"
+
+
 @runtime_checkable
 class AgentAdapter(Protocol):
     name: str
@@ -45,6 +52,38 @@ class AgentAdapter(Protocol):
 
     def compatibility(self) -> AgentCompatibility:
         ...
+
+
+def classify_resumability(session: dict[str, Any]) -> ResumeStatus:
+    """Classify resume evidence without treating a summary as resume evidence."""
+    if session.get("record_kind") in {"bridge_session", "metadata_only"}:
+        return ResumeStatus.METADATA_ONLY
+    if session.get("has_conversation_content") is False:
+        return ResumeStatus.METADATA_ONLY
+    if session.get("has_rollout") is False:
+        return ResumeStatus.INVALID
+    if any(
+        session.get(field) is True
+        for field in ("has_conversation_content", "has_rollout", "has_session_record")
+    ):
+        return ResumeStatus.RESUMABLE
+    if session.get("record_kind") == "conversation":
+        return ResumeStatus.LIKELY_RESUMABLE
+    return ResumeStatus.INVALID
+
+
+def filter_resume_candidates(
+    sessions: list[dict[str, Any]], include_unverified: bool = False
+) -> list[dict[str, Any]]:
+    """Return verified candidates by default, retaining original record objects."""
+    if include_unverified:
+        return list(sessions)
+    return [
+        session
+        for session in sessions
+        if classify_resumability(session)
+        in {ResumeStatus.RESUMABLE, ResumeStatus.LIKELY_RESUMABLE}
+    ]
 
 
 def read_jsonl_lines(file: Path) -> list[dict[str, Any]]:

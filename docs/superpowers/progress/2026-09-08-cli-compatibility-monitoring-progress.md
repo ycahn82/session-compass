@@ -15,8 +15,8 @@
 | Task | Status | Evidence |
 |---|---|---|
 | Task 1: characterization tests | completed | Commit `f846c9a`; characterization baseline and resume command expectations are recorded |
-| Task 2: service modules | in_progress | Registry and characterization tests PASS; SQLite connections now close explicitly |
-| Task 3: resumability filtering | pending | - |
+| Task 2: service modules | completed | Commit `ac56788`; service modules, registry, and behavior-preserving CLI orchestration are isolated |
+| Task 3: resumability filtering | completed | Commit pending; 9-test suite PASS including Claude bridge-session, metadata-only, invalid Codex, and opt-in diagnostics |
 | Task 4: storage contracts | pending | - |
 | Task 5: version floors | pending | - |
 | Task 6: dangerous resume | pending | - |
@@ -39,3 +39,7 @@
 - Task 2 service adapters and registry are implemented in the isolated worktree.
 - Task 2 verification: `PYTHONPATH=src python -m unittest tests.test_characterization tests.agents.test_registry -v` -> 3 tests PASS, with no ResourceWarnings.
 - Task 2 keeps dangerous permission handling deferred to Task 6; `dangerous=True` remains behavior-preserving for now.
+- Task 2 committed as `ac56788`.
+- Task 3 RED test confirmed the resumability API was absent before implementation.
+- Task 3 verification: `PYTHONPATH=src python -m unittest discover -s tests -v` -> 9 tests PASS.
+- Task 3 hides `metadata_only` and `invalid` records by default and supports `--include-unverified` diagnostics.

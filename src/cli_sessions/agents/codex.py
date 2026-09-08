@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-from .base import AgentAdapter, AgentCompatibility, file_mtime, parse_timestamp, read_jsonl_lines
+from .base import AgentAdapter, AgentCompatibility, classify_resumability, parse_timestamp, read_jsonl_lines
 
 
 HOME = Path.home()
@@ -50,8 +50,9 @@ class CodexAdapter:
         except (OSError, sqlite3.Error):
             return []
 
-        return [
-            {
+        sessions = []
+        for session_id, cwd, title, first_message, preview, updated_at_ms, updated_at in rows:
+            session = {
                 "tool": self.name,
                 "id": str(session_id),
                 "cwd": cwd or "(unknown)",
@@ -59,9 +60,12 @@ class CodexAdapter:
                 "last_active": parse_timestamp(updated_at_ms)
                 or parse_timestamp(updated_at)
                 or datetime.fromtimestamp(0, tz=timezone.utc),
+                "record_kind": "conversation",
+                "has_rollout": find_codex_rollout_file(str(session_id)) is not None,
             }
-            for session_id, cwd, title, first_message, preview, updated_at_ms, updated_at in rows
-        ]
+            session["resume_status"] = classify_resumability(session).value
+            sessions.append(session)
+        return sessions
 
     def collect_sessions(self) -> list[dict[str, Any]]:
         sessions = self.collect_state_sessions()
@@ -90,8 +94,11 @@ class CodexAdapter:
                     "summary": entry.get("thread_name") or "(no summary available)",
                     "last_active": parse_timestamp(entry.get("updated_at"))
                     or datetime.fromtimestamp(0, tz=timezone.utc),
+                    "record_kind": "conversation",
+                    "has_rollout": rollout_file is not None,
                 }
             )
+            sessions[-1]["resume_status"] = classify_resumability(sessions[-1]).value
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
