@@ -1,8 +1,8 @@
-# cli-sessions 커스텀 마스터 플랜
+# Session Compass 커스텀 마스터 플랜
 
 ## 1. 목적
 
-본 문서는 포크된 `cli-sessions` 프로젝트를 다음 도구 중심의 실용적이고 복잡도가 낮은 워크플로우에 맞게 커스텀하기 위한 마스터 플랜을 정의합니다:
+본 문서는 upstream `cli-sessions`에서 출발한 `Session Compass` 프로젝트를 다음 도구 중심의 실용적이고 복잡도가 낮은 워크플로우에 맞게 커스텀하기 위한 마스터 플랜을 정의합니다:
 
 - Antigravity
 - Codex
@@ -94,7 +94,7 @@ class SessionProvider:
      |             |      |
      +-------------+------+
                    |
-              cli-sessions
+           Session Compass
 ```
 
 해당 서버에서 생성된 세션의 표준 소스(canonical source)는 서버 자체입니다.
@@ -126,7 +126,7 @@ SSH 클라이언트
   |
 AI 서버
   |
-cli-sessions
+Session Compass
 ```
 
 스마트폰에 별도의 세션 데이터베이스나 동기화 로직이 필요하지 않아야 합니다.
@@ -134,13 +134,13 @@ cli-sessions
 사용자는 서버 셸에서 다음과 같이 실행하여:
 
 ```bash
-sessions
+scompass
 ```
 
 또는 이후:
 
 ```bash
-ais
+scompass
 ```
 
 데스크톱 SSH에서 볼 때와 동일한 세션 정보를 확인할 수 있어야 합니다.
@@ -349,8 +349,8 @@ Session
 가능한 문법:
 
 ```bash
-sessions do-ko-tr
-sessions validate
+scompass do-ko-tr
+scompass validate
 ```
 
 또는 이미 지원되는 경우 대화형(interactive) 검색 활용.
@@ -360,9 +360,9 @@ sessions validate
 다음과 같은 필터를 유지하거나 지원합니다:
 
 ```bash
-sessions --claude
-sessions --codex
-sessions --agy
+scompass --claude
+scompass --codex
+scompass --agy
 ```
 
 ## Phase 1 비요구사항
@@ -603,11 +603,11 @@ Last user message:
 예시:
 
 ```bash
-sessions --project do-ko-tr
-sessions --host aiengine1
-sessions --agent codex
-sessions --branch feature/validate-sessions
-sessions --search synthesize
+scompass --project do-ko-tr
+scompass --host aiengine1
+scompass --agent codex
+scompass --branch feature/validate-sessions
+scompass --search synthesize
 ```
 
 실용적인 경우 여러 필터가 조합(compose)될 수 있어야 합니다.
@@ -615,7 +615,7 @@ sessions --search synthesize
 예시:
 
 ```bash
-sessions --host aiengine1 --project do-ko-tr --agent claude
+scompass --host aiengine1 --project do-ko-tr --agent claude
 ```
 
 파싱 구조는 단순하게 유지하십시오.
@@ -631,13 +631,13 @@ sessions --host aiengine1 --project do-ko-tr --agent claude
 권장 명령어:
 
 ```bash
-sessions doctor
+scompass doctor
 ```
 
 또는 이후:
 
 ```bash
-ais doctor
+scompass doctor
 ```
 
 출력 예시:
@@ -744,7 +744,7 @@ UI를 구축하기 전에 기계가 읽을 수 있는(machine-readable) 인터�
 권장 명령어:
 
 ```bash
-sessions --json
+scompass --json
 ```
 
 개념적 스키마 예시:
@@ -794,13 +794,13 @@ sessions --json
 로컬 머신:
 
 ```text
-sessions
+scompass
    |
-   +-- ssh aiengine1 sessions --json
+   +-- ssh aiengine1 scompass --json
    |
-   +-- ssh aiengine2 sessions --json
+   +-- ssh aiengine2 scompass --json
    |
-   +-- local sessions --json
+   +-- local scompass --json
 ```
 
 결과는 로컬에서 병합됩니다.
@@ -808,7 +808,7 @@ sessions
 ## 권장 사용법
 
 ```bash
-sessions --host aiengine1
+scompass --host aiengine1
 ```
 
 이 명령은 로컬 메타데이터를 필터링하거나 설정된 원격 머신에 질의할 수 있습니다.
@@ -816,9 +816,9 @@ sessions --host aiengine1
 멀티 호스트 집계의 경우 다음과 같은 방식을 고려합니다:
 
 ```bash
-sessions --remote aiengine1
-sessions --remote aiengine2
-sessions --all-hosts
+scompass --remote aiengine1
+scompass --remote aiengine2
+scompass --all-hosts
 ```
 
 정확한 UX는 기존 CLI와의 충돌 여부를 검토한 후에 결정합니다.
@@ -853,36 +853,36 @@ ssh = "aiengine2"
 향후 가능한 동작:
 
 ```bash
-ssh -t aiengine1 "sessions --resume <id>"
+ssh -t aiengine1 "scompass --resume <id>"
 ```
 
 신뢰할 수 있고 안전한 경우에만 구현하십시오.
 
 ---
 
-# 19. Phase 11 — 선택적 이름 변경 / 래퍼 (`ais`)
+# 19. Phase 11 — Session Compass 이름과 명령어
 
 초기 포크에서는 가능한 한 업스트림 명령어를 유지해야 합니다:
 
 ```bash
-sessions
+scompass
 ```
 
 커스텀이 안정화된 후 선택적 래퍼를 도입할 수 있습니다:
 
 ```bash
-ais
+scompass
 ```
 
 가능한 명령어:
 
 ```bash
-ais
-ais recent
-ais doctor
-ais --project do-ko-tr
-ais --host aiengine1
-ais --json
+scompass
+scompass recent
+scompass doctor
+scompass --project do-ko-tr
+scompass --host aiengine1
+scompass --json
 ```
 
 패키지 전체의 이름을 조기에 변경하지 마십시오.
@@ -905,7 +905,7 @@ CLI가 언제나 신뢰할 수 있는 단일 원천(source of truth)이어야 �
 Antigravity 확장
         |
         v
-sessions --json
+scompass --json
         |
         v
 세션 트리 (Session tree)
@@ -974,13 +974,13 @@ tmux ls
 과거 기록 조회 및 재개 가능한 AI 대화 확인:
 
 ```bash
-sessions
+scompass
 ```
 
 향후 편의 명령어 후보:
 
 ```bash
-sessions --running
+scompass --running
 ```
 
 사용자들의 반복적인 요구가 있을 때만 고려하십시오.
@@ -1211,7 +1211,7 @@ Antigravity 사용 가능
 
 ```text
 Warning: 2 Claude sessions could not be parsed.
-Run `sessions doctor --verbose` for details.
+Run `scompass doctor --verbose` for details.
 ```
 
 ---
@@ -1223,13 +1223,13 @@ Run `sessions doctor --verbose` for details.
 선택적 플래그:
 
 ```bash
-sessions --verbose
+scompass --verbose
 ```
 
 또는:
 
 ```bash
-sessions doctor --verbose
+scompass doctor --verbose
 ```
 
 진단 출력에 포함될 수 있는 항목:
@@ -1417,7 +1417,7 @@ v0.4-remote-hosts
 다음 워크플로우가 안정적으로 작동하면 이 커스텀 프로젝트는 이미 성공한 것입니다:
 
 ```text
-$ sessions
+$ scompass
 
 DO-KO-TR
   Claude        aiengine1   validate sessions       Sep 8 09:31
@@ -1618,11 +1618,11 @@ Antigravity ------------------+          v
 ```text
 노트북
   |
-sessions --all-hosts
+scompass --all-hosts
   |
-  +-- ssh aiengine1 sessions --json
+  +-- ssh aiengine1 scompass --json
   |
-  +-- ssh aiengine2 sessions --json
+  +-- ssh aiengine2 scompass --json
 ```
 
 선택적 최종 계층:
@@ -1630,7 +1630,7 @@ sessions --all-hosts
 ```text
 Antigravity 사이드바
         |
-   sessions --json
+   scompass --json
 ```
 
 ---
@@ -1646,7 +1646,7 @@ Antigravity 사이드바
 세션은 다음 명령어를 통해 수초 내에 찾을 수 있어야 합니다:
 
 ```bash
-sessions
+scompass
 ```
 
 또는 소수의 필터를 조합하여 찾을 수 있어야 합니다.
