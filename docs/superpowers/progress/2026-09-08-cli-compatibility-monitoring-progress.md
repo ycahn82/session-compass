@@ -20,8 +20,8 @@
 | Task 4: storage contracts | completed | Commit `357716b`; read-only schema checks pass for Claude, Codex, AGY, and Copilot |
 | Task 5: version floors | completed | Commit `bc64c58`; verified floors and help capability fixtures are recorded |
 | Task 6: dangerous resume | completed | Commit `a00c445`; native flags and CLI forwarding pass |
-| Task 7: compatibility probe | completed | Commit pending; read-only probe, timeout handling, and report sanitization pass |
-| Task 8: GitHub Actions | pending | - |
+| Task 7: compatibility probe | completed | Commit `57670f4`; read-only probe, timeout handling, and report sanitization pass |
+| Task 8: GitHub Actions | completed | Commit pending; weekly workflow, artifact upload, and failure isolation are defined |
 | Task 9: Issue automation | pending | - |
 | Task 10: README/final verification | pending | - |
 
@@ -58,3 +58,6 @@
 - Task 7 RED test confirmed the maintainer probe module was absent before implementation.
 - Task 7 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 21 tests PASS.
 - Task 7 probe runs only `--version` and `--help`, handles missing flags/timeouts per agent, and sanitizes paths, UUIDs, and common secret patterns.
+- Task 7 committed as `57670f4`.
+- Task 8 verification: workflow static assertions and the 21-test suite PASS.
+- Task 8 workflow uses Monday schedule plus manual dispatch, only `contents: read` and `issues: write`, always uploads sanitized artifacts, and fails after collecting all agent results.

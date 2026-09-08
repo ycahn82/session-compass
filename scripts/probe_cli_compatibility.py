@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
@@ -77,9 +78,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--executable-dir", type=Path)
     parser.add_argument("--timeout", type=float, default=10.0)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     report = [probe_agent(adapter, args.executable_dir, args.timeout) for adapter in get_adapters()]
-    print(json.dumps(report, indent=2, sort_keys=True))
+    serialized = json.dumps(report, indent=2, sort_keys=True)
+    if args.output:
+        args.output.write_text(serialized + "\n", encoding="utf-8")
+    else:
+        print(serialized)
+    sys.exit(0 if all(result["status"] == "pass" for result in report) else 1)
 
 
 if __name__ == "__main__":

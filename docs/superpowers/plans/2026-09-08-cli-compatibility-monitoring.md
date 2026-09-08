@@ -556,7 +556,7 @@ git commit -m "feat: add sanitized CLI compatibility probe"
 - Consumes: Task 7의 probe와 report
 - Produces: 주간 최신 CLI compatibility artifact와 Issue reporter가 읽는 JSON
 
-- [ ] **Step 1: workflow trigger와 권한 정의**
+- [x] **Step 1: workflow trigger와 권한 정의**
 
 다음 trigger와 권한만 사용한다.
 
@@ -571,7 +571,7 @@ permissions:
   issues: write
 ```
 
-- [ ] **Step 2: 최신 CLI 설치 단계 작성**
+- [x] **Step 2: 최신 CLI 설치 단계 작성**
 
 Node를 설치한 뒤 다음 공개 배포 명령을 실행한다.
 
@@ -584,15 +584,15 @@ curl -fsSL https://antigravity.google/cli/install.sh | bash
 
 설치 직후 각 command의 `--version`을 기록한다. 실제 login, model request, session creation은 실행하지 않는다.
 
-- [ ] **Step 3: probe와 artifact upload 연결**
+- [x] **Step 3: probe와 artifact upload 연결**
 
 `PYTHONPATH=src python scripts/probe_cli_compatibility.py --output compatibility-report.json`을 실행하고, 성공/실패와 관계없이 `compatibility-report.json` 및 bounded log를 `actions/upload-artifact@v4`로 업로드한다.
 
-- [ ] **Step 4: agent별 실패 격리 확인**
+- [x] **Step 4: agent별 실패 격리 확인**
 
 한 agent 설치나 help가 실패해도 나머지 agent의 결과가 생성되도록 workflow exit status를 report 단계 이후까지 보존한다. 최종 job은 하나라도 contract failure가 있으면 실패 상태가 된다.
 
-- [ ] **Step 5: workflow YAML 정적 검증**
+- [x] **Step 5: workflow YAML 정적 검증**
 
 Run: `python3 - <<'PY'\nfrom pathlib import Path\ntext = Path('.github/workflows/cli-compatibility.yml').read_text()\nassert 'workflow_dispatch:' in text\nassert 'issues: write' in text\nassert 'contents: read' in text\nassert 'resume' in text\nPY`
 
