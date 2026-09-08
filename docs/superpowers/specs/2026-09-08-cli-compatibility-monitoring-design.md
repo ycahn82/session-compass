@@ -37,6 +37,7 @@ README에는 다음 정책을 명시한다.
 - 사용자가 agent CLI를 업데이트할 때 `cli-sessions`도 최신 버전인지 확인한다.
 - agent CLI 업데이트 후 resume 또는 permission argument가 변경되면 `cli-sessions` 업데이트가 필요할 수 있다.
 - dangerous resume은 현재 배포된 `cli-sessions` adapter가 해당 native option을 지원하는 경우에만 허용된다.
+- 지원 버전은 agent별 `resume_min_version`과 `storage_min_version`으로 분리해 관리한다.
 - 최신 agent CLI의 변경 여부는 runtime이 아니라 주간 maintainer 호환성 검사에서 확인한다.
 - 사용자는 `sessions doctor` 또는 호환성 검사 결과를 통해 현재 agent CLI 상태를 확인할 수 있다.
 
@@ -131,6 +132,36 @@ class AgentAdapter(Protocol):
 ```
 
 버전은 최소 버전 검증과 진단 정보에 사용한다. 최신 버전에 대한 허용 여부는 `max_version` 목록이 아니라 실제 capability 탐지 결과로 판단한다.
+
+### Version floor와 storage contract
+
+최소 버전은 하나가 아니라 다음 두 개로 관리한다.
+
+```python
+AgentCompatibility(
+    agent="codex",
+    resume_min_version="<검증된 최소 resume 버전>",
+    storage_min_version="<검증된 최소 storage 버전>",
+    tested_latest_version="<주간 검사에서 확인된 최신 버전>",
+)
+```
+
+- `resume_min_version`: 해당 agent의 resume command와 권한 옵션이 검증된 최소 CLI 버전
+- `storage_min_version`: `cli-sessions`가 읽는 session JSONL/SQLite 구조가 검증된 최소 CLI 버전
+- `tested_latest_version`: 최소 버전이 아니며, 주간 workflow의 최신 검사 결과를 표시하는 진단 값
+
+현재 collector가 의존하는 storage contract는 다음과 같다.
+
+| Agent | Storage | 필수 contract |
+|---|---|---|
+| Claude | project JSONL | `cwd`, `type`, `timestamp`, `message.content` |
+| Codex | `state_*.sqlite` 또는 JSONL fallback | `threads`의 `id`, `cwd`, `title`, `first_user_message`, `preview`, `updated_at_ms`, `updated_at` |
+| Antigravity | conversation SQLite + history JSONL | SQLite의 `steps`, history의 `conversationId`, `workspace`, `display` |
+| Copilot | `session-store.db` | `sessions`의 `id`, `cwd`, `summary`, `updated_at`, `turns`의 `session_id`, `user_message`, `turn_index` |
+
+storage reader는 사용자 database를 read-only로 열고 migration하지 않는다. 선택 필드가 없으면 fallback 또는 빈 값을 사용하고, 필수 table/field가 없으면 해당 agent만 진단 가능한 방식으로 skip한다.
+
+최소 버전 숫자는 현재 설치 버전을 그대로 복사하지 않는다. 과거 release의 resume command와 storage fixture를 확보해 가장 오래된 검증 가능 버전을 결정한다. 과거 버전을 재현할 수 없는 경우에는 검증된 최초 버전을 지원 floor로 선언하고 더 오래된 버전은 공식 지원 대상에서 제외한다.
 
 ## Capability 검사 정책
 
@@ -306,6 +337,7 @@ GitHub Actions에서만 다음을 확인한다.
 - `src/cli_sessions/cli.py`: argparse, session 선택, registry 호출, 사용자 출력
 - `tests/agents/`: 서비스별 collector, adapter, command builder unit/fake executable 테스트
 - `tests/fixtures/cli_help/`: 최소 버전 및 변경 시나리오 help fixture
+- `tests/fixtures/storage/`: 서비스별 legacy/current JSONL 및 SQLite storage fixture
 - `.github/workflows/cli-compatibility.yml`: 최신 CLI 주간 검사와 수동 실행
 - `.github/scripts/`: capability 결과 정규화 및 Issue 생성·갱신 보조 코드
 - `README.md`: 사용자 업데이트 정책과 지원 범위 문서
