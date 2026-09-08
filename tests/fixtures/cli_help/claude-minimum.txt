@@ -1,0 +1,2 @@
+--resume <session-id>
+--dangerously-skip-permissions

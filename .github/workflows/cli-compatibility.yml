@@ -1,0 +1,101 @@
+name: CLI compatibility
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run unit and metadata regression tests
+        shell: bash
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+      - name: Install latest public agent CLIs
+        shell: bash
+        run: |
+          set +e
+          npm install --global @anthropic-ai/claude-code
+          npm install --global @openai/codex
+          npm install --global @github/copilot
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+          exit 0
+
+      - name: Probe version and help contracts
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Check resume and native dangerous-permission capabilities only.
+          PYTHONPATH=src python scripts/probe_cli_compatibility.py \
+            --output compatibility-report.json
+
+      - name: Sanitize compatibility report
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          if test -f compatibility-report.json; then
+            PYTHONPATH=src python scripts/build_compatibility_report.py \
+              compatibility-report.json \
+              --commit-sha "${GITHUB_SHA}" > compatibility-report-sanitized.json
+          else
+            printf '{"commit_sha":"%s","results":[],"failure":"probe_report_missing"}\n' \
+              "${GITHUB_SHA}" > compatibility-report-sanitized.json
+          fi
+
+      - name: Upload compatibility artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-compatibility-${{ github.run_id }}
+          path: |
+            compatibility-report.json
+            compatibility-report-sanitized.json
+          if-no-files-found: warn
+
+      - name: Update compatibility issues
+        if: ${{ always() }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require("fs");
+            const { updateCompatibilityIssues } = require(
+              `${process.env.GITHUB_WORKSPACE}/.github/scripts/update_compatibility_issue.js`
+            );
+            const report = JSON.parse(fs.readFileSync("compatibility-report-sanitized.json", "utf8"));
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await updateCompatibilityIssues({
+              github,
+              context,
+              results: report.results || [],
+              artifactUrl: runUrl,
+              runUrl,
+            });
+
+      - name: Fail when any capability check fails
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          test -f compatibility-report.json
+          PYTHONPATH=src python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("compatibility-report.json").read_text())
+          raise SystemExit(0 if report and all(item.get("status") == "pass" for item in report) else 1)
+          PY

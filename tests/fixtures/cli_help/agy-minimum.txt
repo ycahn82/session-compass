@@ -1,0 +1,2 @@
+--conversation
+--dangerously-skip-permissions
