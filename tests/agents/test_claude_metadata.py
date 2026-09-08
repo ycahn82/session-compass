@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from cli_sessions.agents import claude
+from session_compass.agents import claude
 
 
 class ClaudeMetadataTests(unittest.TestCase):

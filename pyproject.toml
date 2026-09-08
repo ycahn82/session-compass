@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cli-sessions"
+name = "session-compass"
 version = "0.1.0"
-description = "List and resume Claude Code, Codex, Antigravity, and Copilot CLI sessions from one place"
+description = "Discover and resume local sessions from Claude Code, Codex, Antigravity, and Copilot CLI"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [
     { name = "12signal", email = "pavbyte@gmail.com" }
 ]
-keywords = ["cli", "claude-code", "codex", "copilot", "antigravity", "sessions", "resume"]
+keywords = ["cli", "coding-agents", "claude-code", "codex", "copilot", "antigravity", "sessions", "resume"]
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 [project.scripts]
-sessions = "cli_sessions.cli:main"
+scompass = "session_compass.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/cli_sessions"]
+packages = ["src/session_compass"]

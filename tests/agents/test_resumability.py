@@ -4,8 +4,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-from cli_sessions.agents.base import ResumeStatus, classify_resumability, filter_resume_candidates
-from cli_sessions.agents.claude import ClaudeAdapter
+from session_compass.agents.base import ResumeStatus, classify_resumability, filter_resume_candidates
+from session_compass.agents.claude import ClaudeAdapter
 
 
 class ResumabilityTests(unittest.TestCase):
@@ -17,7 +17,7 @@ class ResumabilityTests(unittest.TestCase):
                 json.dumps({"type": "bridge-session", "sessionId": "bridge-id"}) + "\n",
                 encoding="utf-8",
             )
-            with patch("cli_sessions.agents.claude.CLAUDE_PROJECTS_DIR", Path(tempdir)):
+            with patch("session_compass.agents.claude.CLAUDE_PROJECTS_DIR", Path(tempdir)):
                 session = ClaudeAdapter().collect_sessions()[0]
 
         self.assertEqual(session["record_kind"], "bridge_session")

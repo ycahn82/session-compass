@@ -1,7 +1,7 @@
 import unittest
 
-from cli_sessions.agents.base import AgentAdapter
-from cli_sessions.agents.registry import get_adapters
+from session_compass.agents.base import AgentAdapter
+from session_compass.agents.registry import get_adapters
 
 
 class RegistryTests(unittest.TestCase):

@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from cli_sessions.agents import antigravity
+from session_compass.agents import antigravity
 
 
 class AntigravityMetadataTests(unittest.TestCase):

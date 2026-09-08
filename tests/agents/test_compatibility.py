@@ -1,8 +1,8 @@
 import unittest
 from pathlib import Path
 
-from cli_sessions.agents.base import validate_help_contract
-from cli_sessions.agents.registry import get_adapters
+from session_compass.agents.base import validate_help_contract
+from session_compass.agents.registry import get_adapters
 
 
 class CompatibilityManifestTests(unittest.TestCase):
