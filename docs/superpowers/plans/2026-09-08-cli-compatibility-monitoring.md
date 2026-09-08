@@ -177,7 +177,7 @@ class ClaudeAdapter:
         ...
 ```
 
-이 단계에서는 `dangerous=True`도 기존 command와 동일하게 반환해 behavior-preserving 이동을 유지한다. 실제 dangerous flag는 Task 5에서 추가한다.
+이 단계에서는 `dangerous=True`도 기존 command와 동일하게 반환해 behavior-preserving 이동을 유지한다. 실제 dangerous flag는 Task 6에서 추가한다.
 
 - [ ] **Step 4: registry와 `cli.py` 연결 구현**
 
@@ -198,7 +198,82 @@ git commit -m "refactor: split agent session integrations by service"
 
 ---
 
-### Task 3: 서비스별 storage contract fixture와 read-only schema 검증
+### Task 3: resume 후보 판정과 기본 목록 필터
+
+**Files:**
+- Modify: `src/cli_sessions/agents/base.py`
+- Modify: `src/cli_sessions/agents/claude.py`
+- Modify: `src/cli_sessions/agents/codex.py`
+- Modify: `src/cli_sessions/agents/antigravity.py`
+- Modify: `src/cli_sessions/agents/copilot.py`
+- Modify: `src/cli_sessions/agents/registry.py`
+- Modify: `src/cli_sessions/cli.py`
+- Create: `tests/agents/test_resumability.py`
+
+**Interfaces:**
+- Consumes: Task 2의 서비스별 adapter와 `list[dict[str, Any]]` session record
+- Produces: `ResumeStatus`, `classify_resumability(session) -> ResumeStatus`, `filter_resume_candidates(sessions, include_unverified) -> list[dict[str, Any]]`
+
+- [ ] **Step 1: 서비스별 resumability 실패 테스트 작성**
+
+다음 record를 기본 목록에서 제외하는 테스트를 먼저 작성한다.
+
+```python
+assert classify_resumability({"tool": "claude", "record_kind": "bridge_session"}) == ResumeStatus.METADATA_ONLY
+assert classify_resumability({"tool": "claude", "id": "id", "has_conversation_content": False}) == ResumeStatus.METADATA_ONLY
+assert classify_resumability({"tool": "codex", "id": "id", "has_rollout": False}) == ResumeStatus.INVALID
+```
+
+AGY의 summary가 비어 있어도 DB와 유효한 activity record가 있는 session은 숨기지 않는다.
+
+- [ ] **Step 2: resumability 상태와 provenance 타입 구현**
+
+`base.py`에 다음 enum과 내부 필드를 추가한다.
+
+```python
+class ResumeStatus(Enum):
+    RESUMABLE = "resumable"
+    LIKELY_RESUMABLE = "likely_resumable"
+    METADATA_ONLY = "metadata_only"
+    INVALID = "invalid"
+```
+
+session record에는 `resume_status`, `record_kind`, `summary_source`를 추가하되 기존 표시용 필드는 유지한다.
+
+- [ ] **Step 3: Claude bridge-session 판정 구현**
+
+`type == "bridge-session"`이고 user/assistant conversation record가 없는 JSONL은 `METADATA_ONLY`로 분류한다. 실제 conversation record가 있거나 검증된 Remote Control session 정보가 있으면 `RESUMABLE` 또는 `LIKELY_RESUMABLE`로 분류한다.
+
+- [ ] **Step 4: Codex, AGY, Copilot evidence 판정 구현**
+
+Codex는 `threads` row와 연결된 rollout artifact를 확인한다. AGY는 conversation DB와 유효한 `steps` row를 확인하되, `steps` count를 summary로 사용하지 않는다. Copilot은 `sessions` row와 ID를 확인한다.
+
+- [ ] **Step 5: 기본 filter와 진단 option 구현**
+
+`cli.py`에 `--include-unverified`를 추가한다. 기본값은 `False`이며 `RESUMABLE`, `LIKELY_RESUMABLE`만 목록에 남긴다. 옵션이 켜지면 `METADATA_ONLY`, `INVALID`도 표시하고 각 row에 상태를 표시한다.
+
+숨겨진 개수가 있으면 다음과 같이 안내한다.
+
+```text
+2 unverified sessions hidden. Use --include-unverified to inspect them.
+```
+
+- [ ] **Step 6: resumability test 실행**
+
+Run: `PYTHONPATH=src python -m unittest tests.agents.test_resumability -v`
+
+Expected: 서비스별 상태 판정, 기본 filter, `--include-unverified`, summary가 없어도 resume evidence가 있는 session을 유지하는 동작이 PASS한다.
+
+- [ ] **Step 7: resumability 구현을 커밋**
+
+```bash
+git add src/cli_sessions/agents src/cli_sessions/cli.py tests/agents/test_resumability.py
+git commit -m "feat: show only resumable session candidates by default"
+```
+
+---
+
+### Task 4: 서비스별 storage contract fixture와 read-only schema 검증
 
 **Files:**
 - Create: `tests/fixtures/storage/claude/legacy.jsonl`
@@ -215,7 +290,7 @@ git commit -m "refactor: split agent session integrations by service"
 - Create: `tests/agents/test_storage_contracts.py`
 
 **Interfaces:**
-- Consumes: Task 2의 서비스별 `collect_sessions()`
+- Consumes: Task 2의 서비스별 `collect_sessions()`와 Task 3의 resumability 상태
 - Produces: 서비스별 필수 storage contract를 확인하는 `check_storage_contract(path) -> ContractReport`
 
 - [ ] **Step 1: fixture 기반 contract 실패 테스트 작성**
@@ -261,7 +336,7 @@ git commit -m "test: define per-agent session storage contracts"
 
 ---
 
-### Task 4: 서비스별 최소 버전 조사와 compatibility manifest 확정
+### Task 5: 서비스별 최소 버전 조사와 compatibility manifest 확정
 
 **Files:**
 - Create: `tests/fixtures/cli_help/claude-minimum.txt`
@@ -276,7 +351,7 @@ git commit -m "test: define per-agent session storage contracts"
 - Modify: `README.md`
 
 **Interfaces:**
-- Consumes: Task 3의 storage contract와 공개 release artifact
+- Consumes: Task 4의 storage contract와 공개 release artifact
 - Produces: 각 adapter의 `AgentCompatibility`와 고정된 minimum help fixture
 
 - [ ] **Step 1: 공식 설치 채널과 release 목록을 조사**
@@ -298,7 +373,7 @@ Antigravity:  https://antigravity.google/cli/install.sh
 
 - [ ] **Step 3: storage 최소 버전을 결정**
 
-각 선택 release가 생성하는 session storage fixture가 Task 3의 required contract를 만족하는지 확인한다. resume command와 storage contract의 최초 통과 버전이 다르면 두 버전을 독립적으로 기록한다.
+각 선택 release가 생성하는 session storage fixture가 Task 4의 required contract를 만족하는지 확인한다. resume command와 storage contract의 최초 통과 버전이 다르면 두 버전을 독립적으로 기록한다.
 
 - [ ] **Step 4: help fixture와 compatibility 테스트 작성**
 
@@ -313,7 +388,7 @@ missing dangerous flag                          -> FAIL only for dangerous capab
 
 - [ ] **Step 5: 최소 버전과 storage contract를 README에 기록**
 
-README에 agent별 `resume_min_version`, `storage_min_version`, `tested_latest_version`의 의미와 업데이트 정책을 추가한다. 숫자는 Task 4에서 실제 release artifact와 fixture로 확인한 값만 기록한다.
+README에 agent별 `resume_min_version`, `storage_min_version`, `tested_latest_version`의 의미와 업데이트 정책을 추가한다. 숫자는 Task 5에서 실제 release artifact와 fixture로 확인한 값만 기록한다.
 
 - [ ] **Step 6: compatibility manifest와 테스트를 커밋**
 
@@ -324,7 +399,7 @@ git commit -m "feat: record per-agent CLI and storage compatibility floors"
 
 ---
 
-### Task 5: 공통 dangerous 옵션과 agent별 native resume command 구현
+### Task 6: 공통 dangerous 옵션과 agent별 native resume command 구현
 
 **Files:**
 - Modify: `src/cli_sessions/cli.py`
@@ -335,7 +410,7 @@ git commit -m "feat: record per-agent CLI and storage compatibility floors"
 - Create: `tests/agents/test_resume_commands.py`
 
 **Interfaces:**
-- Consumes: Task 2의 `AgentAdapter.build_resume_command()`와 Task 4의 native contract
+- Consumes: Task 2의 `AgentAdapter.build_resume_command()`와 Task 5의 native contract
 - Produces: `sessions --dangerously-skip-permissions`와 agent별 안전한 command mapping
 
 - [ ] **Step 1: dangerous command의 failing tests 작성**
@@ -380,7 +455,7 @@ git commit -m "feat: map dangerous resume flags per agent"
 
 ---
 
-### Task 6: 최신 CLI 주간 compatibility probe 구현
+### Task 7: 최신 CLI 주간 compatibility probe 구현
 
 **Files:**
 - Create: `scripts/probe_cli_compatibility.py`
@@ -388,7 +463,7 @@ git commit -m "feat: map dangerous resume flags per agent"
 - Create: `tests/test_compatibility_probe.py`
 
 **Interfaces:**
-- Consumes: 각 adapter의 `version_command()`, `help_commands()`, Task 4의 fixture/contract 규칙
+- Consumes: 각 adapter의 `version_command()`, `help_commands()`, Task 5의 fixture/contract 규칙
 - Produces: `compatibility-report.json` with agent/version/capability/status/failure fields
 
 - [ ] **Step 1: fake executable 기반 probe 실패 테스트 작성**
@@ -429,7 +504,7 @@ git commit -m "feat: add sanitized CLI compatibility probe"
 
 ---
 
-### Task 7: GitHub Actions 설치·주간 실행·artifact 수집
+### Task 8: GitHub Actions 설치·주간 실행·artifact 수집
 
 **Files:**
 - Create: `.github/workflows/cli-compatibility.yml`
@@ -437,7 +512,7 @@ git commit -m "feat: add sanitized CLI compatibility probe"
 - Test: `tests/test_compatibility_probe.py`
 
 **Interfaces:**
-- Consumes: Task 6의 probe와 report
+- Consumes: Task 7의 probe와 report
 - Produces: 주간 최신 CLI compatibility artifact와 Issue reporter가 읽는 JSON
 
 - [ ] **Step 1: workflow trigger와 권한 정의**
@@ -491,7 +566,7 @@ git commit -m "ci: check latest agent CLI compatibility weekly"
 
 ---
 
-### Task 8: 고정 Issue 생성·갱신 자동화
+### Task 9: 고정 Issue 생성·갱신 자동화
 
 **Files:**
 - Create: `.github/scripts/update_compatibility_issue.js`
@@ -501,7 +576,7 @@ git commit -m "ci: check latest agent CLI compatibility weekly"
 - Modify: `.github/workflows/cli-compatibility.yml`
 
 **Interfaces:**
-- Consumes: Task 6의 sanitized report
+- Consumes: Task 7의 sanitized report
 - Produces: agent와 문제 유형별 open Issue 재사용 및 comment payload
 
 - [ ] **Step 1: Issue key와 중복 정책 test fixture 작성**
@@ -551,14 +626,14 @@ git commit -m "ci: report compatibility failures in stable issues"
 
 ---
 
-### Task 9: README와 전체 검증
+### Task 10: README와 전체 검증
 
 **Files:**
 - Modify: `README.md`
 - Test: all files under `tests/`
 
 **Interfaces:**
-- Consumes: Task 4의 version floor와 Task 7-8의 workflow/Issue behavior
+- Consumes: Task 5의 version floor와 Task 8-9의 workflow/Issue behavior
 - Produces: 사용자 설치·업데이트·지원 버전 문서와 release-ready verification result
 
 - [ ] **Step 1: README 사용 정책 작성**

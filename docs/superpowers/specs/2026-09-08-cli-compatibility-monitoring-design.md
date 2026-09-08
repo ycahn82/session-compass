@@ -190,6 +190,38 @@ Capability 검사는 maintainer의 주간 workflow에서 수행한다. `cli-sess
 | 최소 버전 미만 | 경고 또는 차단 | 차단 |
 | 주간 help 검사 실패 | runtime에는 영향 없음 | Issue 생성 후 maintainer 판단 |
 
+## Resume 후보 판정과 기본 목록 정책
+
+`cli-sessions`는 storage에 존재하는 모든 record가 아니라, resume 가능성이 있는 session을 기본 목록에 표시한다. resume 가능성을 runtime에서 실제 resume으로 확인하지는 않으며, 각 adapter가 local storage evidence를 기준으로 판정한다.
+
+각 session record에는 다음 내부 상태를 둔다.
+
+```text
+resumable          실제 conversation/session record와 ID가 확인됨
+likely_resumable   필수 storage는 있지만 일부 metadata가 없음
+metadata_only      bridge 또는 catalog metadata만 있고 conversation record가 없음
+invalid            ID 또는 필수 storage가 없어 resume 후보가 아님
+```
+
+기본 `sessions` 명령은 `resumable`과 `likely_resumable`만 표시한다. `metadata_only`와 `invalid`는 숨기고, 숨겨진 개수를 안내한다.
+
+```bash
+sessions --include-unverified
+```
+
+`--include-unverified`는 진단 목적의 opt-in 경로이며, metadata-only record를 일반 resume 후보로 가장하지 않는다.
+
+서비스별 기본 evidence는 다음과 같다.
+
+| Agent | 기본 resume 후보 evidence |
+|---|---|
+| Claude | 실제 user/assistant conversation record와 session ID, 또는 검증된 Remote Control session |
+| Codex | `threads` record와 연결된 rollout/session artifact |
+| Antigravity | conversation DB와 유효한 `steps` record |
+| Copilot | `sessions` record와 resume 가능한 session ID |
+
+summary가 없다는 이유만으로 session을 숨기지 않는다. 실제 session evidence가 있으면 summary fallback과 함께 표시한다. 반대로 Claude의 `bridge-session` metadata-only record처럼 대화 본문이 없는 record는 기본 목록에서 제외한다. `steps` count처럼 의미가 확정되지 않은 내부 실행 count는 summary로 표시하지 않고 진단 정보로만 보관한다.
+
 ## 주간 GitHub Actions workflow
 
 ### 실행 시점
@@ -336,6 +368,7 @@ GitHub Actions에서만 다음을 확인한다.
 - `src/cli_sessions/agents/registry.py`: adapter 등록과 service 이름 조회
 - `src/cli_sessions/cli.py`: argparse, session 선택, registry 호출, 사용자 출력
 - `tests/agents/`: 서비스별 collector, adapter, command builder unit/fake executable 테스트
+- `tests/agents/test_resumability.py`: 서비스별 resume 후보 판정과 기본 필터 테스트
 - `tests/fixtures/cli_help/`: 최소 버전 및 변경 시나리오 help fixture
 - `tests/fixtures/storage/`: 서비스별 legacy/current JSONL 및 SQLite storage fixture
 - `.github/workflows/cli-compatibility.yml`: 최신 CLI 주간 검사와 수동 실행
@@ -356,6 +389,8 @@ GitHub Actions에서만 다음을 확인한다.
 - `sessions --dangerously-skip-permissions`가 네 agent에 대해 native flag로 변환된다.
 - 네 서비스의 collector와 resume 로직이 각 서비스 모듈에 분리되어 있다.
 - 서비스별 모듈 이동 전후의 session 목록 필드와 resume command argument가 동일하다.
+- `resumable` 또는 `likely_resumable` session만 기본 목록에 표시된다.
+- `metadata_only`와 `invalid` session은 기본 목록에서 숨겨지고 `--include-unverified`로만 볼 수 있다.
 - agent별 일반/dangerous resume command unit test가 통과한다.
 - 최소 버전 fixture 테스트가 통과한다.
 - 등록되지 않은 최신 버전도 capability가 확인되면 검사에 통과한다.
