@@ -5,7 +5,7 @@
 - 설계 승인 상태: 사용자 승인 완료
 - 작성일: 2026-09-08
 - 대상 저장소: `cli-sessions`
-- 구현 범위: Agent별 resume command adapter, capability contract 검사, 주간 GitHub Actions 검사, 호환성 Issue 자동 생성·갱신, README 운영 문서
+- 구현 범위: 서비스별 Agent 모듈 분리, Agent별 resume command adapter, capability contract 검사, 주간 GitHub Actions 검사, 호환성 Issue 자동 생성·갱신, README 운영 문서
 
 ## 목표
 
@@ -18,6 +18,7 @@
 3. dangerous 옵션 변경을 발견하면 잘못된 옵션을 자동 추측하지 않고 Issue로 보고한다.
 4. 주 1회 최신 agent CLI를 검사하고, 문제가 발생하면 agent별 고정 GitHub Issue에 결과를 누적한다.
 5. 문제 해결은 자동 코드 수정이 아니라 사람이 검토하고 `cli-sessions`를 업데이트하는 흐름으로 유지한다.
+6. 기존 session 수집과 resume 동작은 서비스별 모듈로 이동하되, 구조 이동 단계에서는 동작을 변경하지 않는다.
 
 ## 비목표
 
@@ -54,6 +55,36 @@ README에는 다음 정책을 명시한다.
 
 ## 아키텍처
 
+### 서비스별 모듈 경계
+
+모든 서비스를 하나의 `agents.py`에 넣지 않는다. 서비스별 코드는 독립 모듈로 분리한다.
+
+```text
+src/cli_sessions/
+├── cli.py
+└── agents/
+    ├── __init__.py
+    ├── base.py
+    ├── claude.py
+    ├── codex.py
+    ├── antigravity.py
+    ├── copilot.py
+    └── registry.py
+```
+
+각 서비스 모듈은 해당 서비스의 다음 항목을 함께 소유한다.
+
+- session storage 수집
+- session metadata 변환
+- 일반 resume command
+- dangerous permission command
+- version/help 검사 규칙
+- 서비스별 오류 처리와 표시 이름
+
+`base.py`에는 공통 protocol, capability report, 공통 타입만 둔다. `registry.py`에는 네 서비스 adapter의 등록과 조회만 둔다. `cli.py`는 argparse, 목록 정렬·출력, 사용자 선택, adapter 호출만 담당한다.
+
+현재 `cli.py`에 있는 `collect_claude_sessions()`, `collect_codex_sessions()`, `collect_antigravity_sessions()`, `collect_copilot_sessions()`와 서비스별 resume command 생성 로직은 각 모듈로 이동한다. 이 이동은 먼저 기존 결과와 command를 보존하는 구조적 리팩터링으로 수행한다.
+
 ### Agent adapter
 
 각 agent는 독립 adapter를 갖는다. Adapter는 다음 책임만 가진다.
@@ -78,7 +109,7 @@ class AgentAdapter(Protocol):
     def build_resume_command(self, session_id: str, dangerous: bool) -> list[str]: ...
 ```
 
-실제 구현에서는 현재 저장소의 작은 구조를 존중하되, command 생성과 주간 capability 검사를 `cli.py`의 resume 흐름에서 분리한다. 사용자의 runtime resume 과정에서는 help probe를 수행하지 않는다. agent별 차이를 공통 함수의 조건문에 계속 추가하지 않는다.
+각 서비스 모듈은 `AgentAdapter`를 구현한다. command 생성과 주간 capability 검사를 `cli.py`의 resume 흐름에서 분리한다. 사용자의 runtime resume 과정에서는 help probe를 수행하지 않는다. 서비스별 차이를 공통 함수의 조건문에 계속 추가하지 않는다.
 
 ### Capability report
 
@@ -266,19 +297,33 @@ GitHub Actions에서만 다음을 확인한다.
 
 구현 시 다음 경계를 사용한다.
 
-- `src/cli_sessions/agents.py`: agent adapter, capability 모델, native command builder
-- `src/cli_sessions/cli.py`: argparse 옵션, session 선택, adapter 호출, 사용자 출력
-- `tests/`: adapter와 command builder unit/fake executable 테스트
+- `src/cli_sessions/agents/base.py`: 공통 adapter protocol, capability 모델, 공통 타입
+- `src/cli_sessions/agents/claude.py`: Claude collector, metadata 변환, resume command, compatibility 규칙
+- `src/cli_sessions/agents/codex.py`: Codex collector, metadata 변환, resume command, compatibility 규칙
+- `src/cli_sessions/agents/antigravity.py`: Antigravity collector, metadata 변환, resume command, compatibility 규칙
+- `src/cli_sessions/agents/copilot.py`: Copilot collector, metadata 변환, resume command, compatibility 규칙
+- `src/cli_sessions/agents/registry.py`: adapter 등록과 service 이름 조회
+- `src/cli_sessions/cli.py`: argparse, session 선택, registry 호출, 사용자 출력
+- `tests/agents/`: 서비스별 collector, adapter, command builder unit/fake executable 테스트
 - `tests/fixtures/cli_help/`: 최소 버전 및 변경 시나리오 help fixture
 - `.github/workflows/cli-compatibility.yml`: 최신 CLI 주간 검사와 수동 실행
 - `.github/scripts/`: capability 결과 정규화 및 Issue 생성·갱신 보조 코드
 - `README.md`: 사용자 업데이트 정책과 지원 범위 문서
 
-구현 전까지 위 파일은 계획된 경계이며, 실제 plan 작성 시 현재 저장소의 Python 3.9 호환성과 의존성 최소화 원칙을 반영해 확정한다.
+구현 순서는 다음과 같다.
+
+1. 현재 collector와 resume command를 서비스별 모듈로 이동한다.
+2. 이동 전후의 session record와 command argument가 동일한지 검증한다.
+3. 공통 dangerous 옵션과 서비스별 native 옵션을 추가한다.
+4. 서비스별 fixture와 compatibility 검사, 주간 workflow를 추가한다.
+
+구조 이동 단계에서는 Python 3.9 호환성과 의존성 최소화 원칙을 유지하고, 기능 변경을 함께 도입하지 않는다.
 
 ## 완료 기준
 
 - `sessions --dangerously-skip-permissions`가 네 agent에 대해 native flag로 변환된다.
+- 네 서비스의 collector와 resume 로직이 각 서비스 모듈에 분리되어 있다.
+- 서비스별 모듈 이동 전후의 session 목록 필드와 resume command argument가 동일하다.
 - agent별 일반/dangerous resume command unit test가 통과한다.
 - 최소 버전 fixture 테스트가 통과한다.
 - 등록되지 않은 최신 버전도 capability가 확인되면 검사에 통과한다.
