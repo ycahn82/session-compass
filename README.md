@@ -1,111 +1,137 @@
-# cli-sessions
+# Session Compass
 
-[![PyPI](https://img.shields.io/pypi/v/cli-sessions)](https://pypi.org/project/cli-sessions/)
+[![PyPI](https://img.shields.io/pypi/v/session-compass)](https://pypi.org/project/session-compass/)
 
-List and resume your **Claude Code**, **Codex**, **Antigravity** (`agy`), and **Copilot CLI** sessions from one place.
+Session Compass is a local-first CLI for discovering, identifying, and resuming sessions created by Claude Code, Codex, Antigravity CLI, and Copilot CLI.
 
-Each of these tools prints a session ID when you quit, with no built-in way to browse past sessions across tools. `sessions` scans each tool's local session storage and gives you one sorted list — most recent at the bottom, like `ls -ltrh` — so you can pick one and jump straight back in.
+This project started as a fork of [cli-sessions](https://github.com/pavbyte/cli-sessions). It keeps the upstream project's practical local-session workflow while adding provider-specific metadata, resumability checks, and compatibility monitoring for independently updated agent CLIs.
 
-```
- 1) [codex  ] 12d ago   ~/Developer/junit-framework      Learn Java fundamentals in JUnit
-    id: 019f82f2-cbb4-71b2-a9e2-1060c05d8ac5
- 2) [claude ] 1h ago    ~/Developer/opensre              Diagnose code issue
-    id: 578822f7-3665-42a8-8223-b51c59faf644
- 3) [agy    ] 47m ago   ~/Developer/ticket-booking       help me learn java from scratch
-    id: d5d954dd-6fe6-4e2d-9325-d9f63fb5abcb
- 4) [copilot] 7m ago    ~                                Session Initialization
-    id: d8567a02-d999-414a-af89-b02d440ebcf1
+## Why Session Compass?
 
-Resume which session? (number, or q to quit):
-```
+Coding agents store useful session data locally, but each agent exposes that history differently. Session Compass gives you one starting point for answering:
+
+- Which agent created this session?
+- Which workspace was it using?
+- What was the session about?
+- When was it last active?
+- Can it be resumed safely?
+
+It is designed for local development machines and remote Linux servers accessed through SSH. It does not require a daemon, a central database, an account, or a web service.
 
 ## Install
 
-Pick whichever fits how you manage Python tools. All three install the same `sessions` command.
-
-**One-line install (recommended if you don't already use pip/pipx)**
-
-Bootstraps `pipx` if it's missing, then installs `cli-sessions` — no manual setup:
+Using `pipx` is recommended for command-line tools because it keeps Session Compass isolated from other Python applications:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pavbyte/cli-sessions/main/install.sh | bash
+pipx install session-compass
 ```
 
-**Using pipx** (if you already have it, or prefer installing CLI tools in their own isolated environment):
+You can also install it with `pip`:
 
 ```bash
-pipx install cli-sessions
+pip install session-compass
 ```
 
-**Using pip:**
+The repository includes an optional installer for machines where `pipx` is not already configured:
 
 ```bash
-pip install cli-sessions
-# or, if `pip` isn't found but `pip3` is:
-pip3 install --user cli-sessions
+curl -fsSL https://raw.githubusercontent.com/ycahn82/session-compass/main/install.sh | bash
 ```
-
-> With `pip install --user`, the `sessions` command may land in a directory that isn't on your `PATH` yet (e.g. `~/.local/bin` on Linux, `~/Library/Python/3.x/bin` on macOS). If `sessions` isn't found after installing, add that directory to your `PATH`, or just use `pipx`/the one-line installer instead, which handle this for you.
 
 ## Usage
 
 ```bash
-sessions             # all sessions, oldest first, most recent last
-sessions --claude     # only Claude Code
-sessions --codex      # only Codex
-sessions --agy        # only Antigravity
-sessions --copilot    # only Copilot CLI
-sessions --include-unverified  # include records without verified resume evidence
-sessions -d           # resume with each agent's native dangerous permission bypass
+scompass             # List sessions from all supported agents
+scompass --claude    # Show Claude Code sessions
+scompass --codex     # Show Codex sessions
+scompass --agy       # Show Antigravity sessions
+scompass --copilot   # Show Copilot CLI sessions
 ```
 
-`-d` is a short alias for `--dangerously-skip-permissions`. It applies the
-corresponding native permission-bypass option for the selected agent.
+Choose a session number to resume it in its original working directory. Press `q` to exit without resuming.
 
-Pick a number to resume that session — `sessions` runs the right resume command (`claude --resume`, `codex resume`, `agy --conversation`, or `copilot --resume=`) in the session's original working directory.
+Use `--include-unverified` when diagnosing records that do not have enough local evidence to be considered resumable:
 
-## How it works
+```bash
+scompass --include-unverified
+```
 
-Nothing is sent anywhere, and there's no telemetry. `sessions` only reads local session files each tool already writes to disk:
+### Permission bypass
 
-- Claude Code: `~/.claude/projects/*/*.jsonl`
-- Codex: `~/.codex/state_*.sqlite` (or `~/.codex/session_index.jsonl` as a fallback)
-- Antigravity: `~/.gemini/antigravity-cli/conversations/*.db` + `history.jsonl`
-- Copilot CLI: `~/.copilot/session-store.db`
+Use `-d` as the short alias for `--dangerously-skip-permissions` when resuming a session:
 
-Any tool you don't have installed is silently skipped — you only see entries for what's actually on your machine.
+```bash
+scompass -d
+scompass --claude -d
+```
 
-## Supported CLI compatibility
+Session Compass translates this shared option to each provider's native permission-bypass option. This can reduce or remove safety prompts from the provider, so use it only in environments where you understand the consequences.
 
-`cli-sessions` keeps each service integration in its own adapter. The version
-floor below is the first version verified in this repository with the current
-resume command and storage contract; it is a conservative support floor, not a
-claim that every older release is compatible.
+## Supported agents
 
-| Service | `resume_min_version` | `storage_min_version` | `tested_latest_version` | Official reference |
-|---|---:|---:|---:|---|
-| Claude Code | `2.1.263` | `2.1.263` | `2.1.263` | [CLI usage](https://docs.anthropic.com/en/docs/claude-code/cli-usage), [npm package](https://www.npmjs.com/package/@anthropic-ai/claude-code) |
-| Codex | `0.153.4` | `0.153.4` | `0.153.4` | [Codex CLI](https://developers.openai.com/codex/cli/), [npm package](https://www.npmjs.com/package/@openai/codex) |
-| Antigravity (`agy`) | `1.1.27` | `1.1.27` | `1.1.27` | [Using AGY CLI](https://antigravity.google/docs/cli/using/), [headless flags](https://antigravity.google/docs/cli/headless/) |
-| Copilot CLI | `1.0.82` | `1.0.82` | `1.0.82` | [CLI reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference), [npm package](https://www.npmjs.com/package/@github/copilot) |
+Session Compass currently reads local session metadata from these locations:
 
-`tested_latest_version` is diagnostic only and will be refreshed by the weekly
-compatibility workflow. Newer service versions are not rejected by a maximum
-version allowlist. The workflow checks the required resume and native
-permission flags instead. If a service changes its CLI arguments or storage
-schema, maintainers update only that service's adapter and add a regression
-fixture; the workflow then reports the change without modifying user data.
+```text
+Claude Code:  ~/.claude/projects/*/*.jsonl
+Codex:        ~/.codex/state_*.sqlite or ~/.codex/session_index.jsonl
+Antigravity:  ~/.gemini/antigravity-cli/conversations/*.db and history.jsonl
+Copilot CLI:  ~/.copilot/session-store.db
+```
 
-Users should update each service CLI independently when they choose. Updating a
-service does not update `cli-sessions` at runtime. The weekly maintainer check
-will detect supported capability changes and open or update a GitHub Issue when
-the adapter needs attention. Runtime never runs a service's `--help` probe or
-writes to its session database.
+An agent that is not installed is skipped. Session databases are opened for metadata discovery only; Session Compass does not migrate, rewrite, or delete them.
+
+The default list focuses on sessions with evidence that they can be resumed. Internal and metadata-only records are hidden from that list. Use `--include-unverified` to inspect diagnostic records without making them normal resume candidates.
+
+## Local-first and privacy
+
+Session Compass reads files already written on your machine. It does not send session content anywhere and does not include telemetry. The current implementation does not use an LLM to generate summaries; it prefers deterministic titles, previews, and user-message metadata already present in local storage.
+
+## Compatibility policy
+
+Agent CLIs can update independently, including their resume arguments and local storage schemas. Each Session Compass provider adapter owns its storage contract, metadata extraction, resumability evidence, and native resume command.
+
+The project maintains separate compatibility floors for the provider CLI's resume command and its session-storage schema. GitHub Actions checks supported provider versions and help contracts weekly and on pull requests. When an upstream change breaks a contract, maintainers review the report and update the affected adapter; normal runtime execution does not probe provider help on every invocation.
+
+## Current capabilities
+
+- Unified session listing across supported coding agents
+- Provider and workspace metadata
+- Deterministic title and summary extraction from local records
+- Resumability filtering for internal, incomplete, or metadata-only records
+- Native resume command mapping per provider
+- Shared `-d`/`--dangerously-skip-permissions` option
+- Read-only compatibility and storage-contract tests
+
+## Roadmap
+
+The master plan is intentionally incremental. Planned work includes:
+
+- Richer text search across agent, project, workspace, title, and branch metadata
+- A stable machine-readable JSON output mode
+- A read-only `doctor` diagnostic command
+- Optional aggregation of session metadata from explicitly selected remote hosts
+- Better provenance for workspace and Git context
+
+These roadmap items are not required for the current interactive listing and resume workflow.
+
+## Fork maintenance
+
+The upstream project is [pavbyte/cli-sessions](https://github.com/pavbyte/cli-sessions). Session Compass keeps the upstream remote separate and documents intentional differences in the repository's development plans.
+
+The public package and command are intentionally separate from the upstream project:
+
+```text
+Upstream cli-sessions:  pip install cli-sessions   -> sessions
+Session Compass:        pip install session-compass -> scompass
+```
+
+Session Compass does not provide a `sessions` alias. This prevents a new installation from replacing or shadowing an existing upstream `cli-sessions` command.
 
 ## Links
 
-- Source: https://github.com/pavbyte/cli-sessions
-- PyPI: https://pypi.org/project/cli-sessions/
+- Source: https://github.com/ycahn82/session-compass
+- Upstream: https://github.com/pavbyte/cli-sessions
+- PyPI: https://pypi.org/project/session-compass/
 
 ## License
 
