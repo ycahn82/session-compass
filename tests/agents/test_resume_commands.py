@@ -63,6 +63,33 @@ class ResumeCommandTests(unittest.TestCase):
         self.assertEqual(calls, [("id", True)])
         subprocess.run.assert_called_once_with(["fake-agent", "id"], cwd="/tmp", check=False)
 
+    def test_cli_does_not_resume_non_resumable_diagnostic_record(self):
+        class FakeAdapter:
+            name = "agy"
+
+            def collect_sessions(self):
+                return [{
+                    "tool": "agy",
+                    "id": "internal-id",
+                    "cwd": "/tmp",
+                    "summary": "internal task",
+                    "last_active": cli.datetime.now(cli.timezone.utc),
+                    "record_kind": "internal_session",
+                    "has_conversation_content": False,
+                }]
+
+            def build_resume_command(self, session_id, dangerous=False):
+                raise AssertionError("internal sessions must not be resumed")
+
+        with patch.object(sys, "argv", ["sessions", "--agy", "--include-unverified"]), \
+                patch.object(cli, "get_adapters", return_value=[FakeAdapter()]), \
+                patch.object(cli, "get_adapter", return_value=FakeAdapter()), \
+                patch.object(cli, "resume_session") as resume, \
+                patch("builtins.input", return_value="1"):
+            cli.main()
+
+        resume.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

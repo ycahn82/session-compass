@@ -126,7 +126,12 @@ def main() -> None:
     if not 1 <= choice <= len(sessions):
         print("Invalid selection.")
         return
-    resume_session(sessions[choice - 1], dangerous=args.dangerously_skip_permissions)
+    selected = sessions[choice - 1]
+    status = classify_resumability(selected)
+    if status not in {ResumeStatus.RESUMABLE, ResumeStatus.LIKELY_RESUMABLE}:
+        print(f"Session is not resumable ({status.value}).")
+        return
+    resume_session(selected, dangerous=args.dangerously_skip_permissions)
 
 
 if __name__ == "__main__":
