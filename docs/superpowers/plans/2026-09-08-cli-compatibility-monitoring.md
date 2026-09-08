@@ -145,7 +145,7 @@ Run: `PYTHONPATH=src python -m unittest discover -s tests -v`
 
 Expected: 새 characterization test와 기존 테스트가 모두 PASS한다. 실패하면 모듈 이동 전에 현재 동작을 정확히 기록하도록 fixture를 수정한다.
 
-- [ ] **Step 4: characterization baseline을 커밋**
+- [x] **Step 4: characterization baseline을 커밋**
 
 ```bash
 git add tests/test_characterization.py tests/__init__.py
@@ -171,7 +171,7 @@ git commit -m "test: capture current session and resume behavior"
 - Consumes: Task 1의 baseline
 - Produces: 각 모듈의 `collect_sessions() -> list[dict[str, Any]]`, `build_resume_command(session_id: str, dangerous: bool = False) -> list[str]`
 
-- [ ] **Step 1: 공통 타입과 protocol의 failing import test 작성**
+- [x] **Step 1: 공통 타입과 protocol의 failing import test 작성**
 
 `tests/agents/test_registry.py`에 다음 import와 기본 속성 검사를 먼저 작성한다.
 
@@ -188,7 +188,7 @@ Run: `PYTHONPATH=src python -m unittest tests.agents.test_registry -v`
 
 Expected: FAIL because the `agents` package and registry do not yet exist.
 
-- [ ] **Step 2: `base.py`에 공통 타입을 구현**
+- [x] **Step 2: `base.py`에 공통 타입을 구현**
 
 Python 3.9 표준 library만 사용해 `AgentAdapter` protocol, `AgentCompatibility`, `ProbeResult`, `CapabilityReport`를 정의한다. `AgentCompatibility`는 다음 필드를 가진다.
 
@@ -203,7 +203,7 @@ class AgentCompatibility:
 
 Python 3.9에서는 `str | None` 대신 `Optional[str]`을 사용한다.
 
-- [ ] **Step 3: 네 서비스 collector를 서비스별 파일로 이동**
+- [x] **Step 3: 네 서비스 collector를 서비스별 파일로 이동**
 
 기존 함수의 parsing 순서, fallback 값, timestamp 변환, read-only SQLite connection을 그대로 유지한다. 각 모듈은 현재 `cli.py`의 서비스별 상수도 함께 소유한다. 모듈 이동 과정에서 SQLite connection은 명시적으로 close해 현재 baseline에서 관찰된 `ResourceWarning`을 제거한다.
 
@@ -220,11 +220,11 @@ class ClaudeAdapter:
 
 이 단계에서는 `dangerous=True`도 기존 command와 동일하게 반환해 behavior-preserving 이동을 유지한다. 실제 dangerous flag는 Task 6에서 추가한다.
 
-- [ ] **Step 4: registry와 `cli.py` 연결 구현**
+- [x] **Step 4: registry와 `cli.py` 연결 구현**
 
 `registry.py`에 `get_adapters() -> list[AgentAdapter]`와 `get_adapter(name: str) -> AgentAdapter`를 구현한다. `cli.py`는 registry를 순회해 session을 수집하고 선택된 adapter의 `build_resume_command()`를 호출한다.
 
-- [ ] **Step 5: 모듈 이동 후 characterization test 실행**
+- [x] **Step 5: 모듈 이동 후 characterization test 실행**
 
 Run: `PYTHONPATH=src python -m unittest discover -s tests -v`
 

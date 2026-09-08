@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from cli_sessions import cli
+from cli_sessions.agents import antigravity, claude, codex, copilot
 
 
 class SessionCollectorCharacterizationTests(unittest.TestCase):
@@ -29,7 +30,7 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-        self.codex_dir = self.root / "codex"
+        self.codex_dir = self.root / ".codex"
         self.codex_dir.mkdir()
         self.codex_db = self.codex_dir / "state_1.sqlite"
         with sqlite3.connect(self.codex_db) as connection:
@@ -113,14 +114,15 @@ class SessionCollectorCharacterizationTests(unittest.TestCase):
             )
 
         self.patches = [
-            patch.object(cli, "CLAUDE_PROJECTS_DIR", self.root / "claude"),
-            patch.object(cli, "CODEX_SESSIONS_DIR", self.codex_dir),
-            patch.object(cli, "CODEX_INDEX_FILE", self.codex_dir / "session_index.jsonl"),
-            patch.object(cli, "AGY_DIR", self.agy_dir),
-            patch.object(cli, "AGY_CONVERSATIONS_DIR", self.agy_conversations),
-            patch.object(cli, "AGY_HISTORY_FILE", self.agy_dir / "history.jsonl"),
-            patch.object(cli, "AGY_METADATA_FILE", agy_cache / "conversation_metadata.json"),
-            patch.object(cli, "COPILOT_DB_FILE", self.copilot_db),
+            patch.object(claude, "CLAUDE_PROJECTS_DIR", self.root / "claude"),
+            patch.object(codex, "CODEX_SESSIONS_DIR", self.codex_dir),
+            patch.object(codex, "CODEX_INDEX_FILE", self.codex_dir / "session_index.jsonl"),
+            patch.object(codex, "HOME", self.root),
+            patch.object(antigravity, "AGY_DIR", self.agy_dir),
+            patch.object(antigravity, "AGY_CONVERSATIONS_DIR", self.agy_conversations),
+            patch.object(antigravity, "AGY_HISTORY_FILE", self.agy_dir / "history.jsonl"),
+            patch.object(antigravity, "AGY_METADATA_FILE", agy_cache / "conversation_metadata.json"),
+            patch.object(copilot, "COPILOT_DB_FILE", self.copilot_db),
         ]
         for active_patch in self.patches:
             active_patch.start()
