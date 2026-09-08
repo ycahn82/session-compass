@@ -69,3 +69,7 @@
 - Task 10 verification: 24 tests PASS with `ResourceWarning` treated as an error; CLI help shows all service filters plus both diagnostic options.
 - Task 10 package verification: wheel build succeeded in an isolated temporary venv after installing the missing `hatchling` build backend; wheel contains `cli_sessions/agents/` modules.
 - Task 10 sensitive-data scan found only intentional schema/test identifiers and documentation references; no actual secret, user prompt, session record, or absolute user path was added.
+- Post-plan PR validation: added `.github/workflows/cli-compatibility-pr.yml` with `pull_request` trigger and `contents: read` only; no Issue reporter or write permission.
+- PR validation commit `0961070` triggered GitHub Actions run `34202513868` on PR #1.
+- Live PR run passed in 26 seconds; downloaded sanitized artifact confirmed Claude `2.1.197`, Codex `0.153.4`, AGY `1.1.27`, and Copilot `1.0.83` all reported `resume=true` and `dangerous_resume=true`.
+- Live run emitted only a GitHub runner annotation that actions were forced from Node 20 to Node 24; job conclusion was successful.
