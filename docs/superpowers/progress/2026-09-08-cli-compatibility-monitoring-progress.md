@@ -84,3 +84,8 @@
 - Task 2 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 28 tests PASS.
 - Task 3 committed as `c45e55e`; diagnostic non-resumable records are blocked from invoking an external agent.
 - Task 3 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 29 tests PASS.
+- Task 4 committed as `ef69a2d`; both weekly and PR workflows now run the unittest regression suite before installing public CLIs.
+- Final local verification: 29 tests PASS with `ResourceWarning` treated as an error; package wheel build and `git diff --check` PASS.
+- Updated branch pushed to PR #1 at commit `62854f6`.
+- GitHub Actions PR run `34207931312` completed successfully in 32 seconds. The new `Run unit and metadata regression tests` step passed; only the pre-existing Node.js 20 deprecation annotation remained.
+- Live AGY read-only smoke after installing the branch showed 4 cataloged user sessions with title/preview and workspace; the 11 internal/uncatalogued sessions were absent.
