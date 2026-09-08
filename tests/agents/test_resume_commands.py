@@ -2,8 +2,8 @@ import unittest
 import sys
 from unittest.mock import patch
 
-from cli_sessions import cli
-from cli_sessions.agents.registry import get_adapters
+from session_compass import cli
+from session_compass.agents.registry import get_adapters
 
 
 class ResumeCommandTests(unittest.TestCase):
