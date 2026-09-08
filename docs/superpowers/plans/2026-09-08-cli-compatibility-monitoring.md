@@ -454,7 +454,7 @@ git commit -m "feat: record per-agent CLI and storage compatibility floors"
 - Consumes: Task 2의 `AgentAdapter.build_resume_command()`와 Task 5의 native contract
 - Produces: `sessions --dangerously-skip-permissions`와 agent별 안전한 command mapping
 
-- [ ] **Step 1: dangerous command의 failing tests 작성**
+- [x] **Step 1: dangerous command의 failing tests 작성**
 
 ```python
 assert claude.build_resume_command("id", True) == [
@@ -473,15 +473,15 @@ assert copilot.build_resume_command("id", True) == [
 
 또한 `dangerous=False`에서는 Task 1의 baseline command가 그대로 유지되는지 검증한다.
 
-- [ ] **Step 2: argparse 옵션 추가**
+- [x] **Step 2: argparse 옵션 추가**
 
 `cli.py`에 `--dangerously-skip-permissions` boolean option을 추가하고, 선택된 session의 adapter에만 `dangerous=True`를 전달한다. 기본값은 `False`다.
 
-- [ ] **Step 3: agent별 native flag 구현**
+- [x] **Step 3: agent별 native flag 구현**
 
 네 adapter가 서로 다른 native flag를 직접 생성하게 한다. `cli.py`나 공통 base에 agent별 flag 문자열을 두지 않는다.
 
-- [ ] **Step 4: command test와 CLI parser test 실행**
+- [x] **Step 4: command test와 CLI parser test 실행**
 
 Run: `PYTHONPATH=src python -m unittest tests.agents.test_resume_commands tests.agents.test_registry -v`
 

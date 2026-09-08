@@ -102,7 +102,10 @@ class AntigravityAdapter:
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        return ["agy", "--conversation", session_id]
+        command = ["agy"]
+        if dangerous:
+            command.append("--dangerously-skip-permissions")
+        return command + ["--conversation", session_id]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "1.1.27", "1.1.27", "1.1.27")

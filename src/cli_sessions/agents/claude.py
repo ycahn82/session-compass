@@ -77,7 +77,10 @@ class ClaudeAdapter:
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        return ["claude", "--resume", session_id]
+        command = ["claude"]
+        if dangerous:
+            command.append("--dangerously-skip-permissions")
+        return command + ["--resume", session_id]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "2.1.263", "2.1.263", "2.1.263")

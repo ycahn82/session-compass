@@ -134,7 +134,10 @@ class CodexAdapter:
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        return ["codex", "resume", session_id]
+        command = ["codex"]
+        if dangerous:
+            command.append("--dangerously-bypass-approvals-and-sandbox")
+        return command + ["resume", session_id]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "0.153.4", "0.153.4", "0.153.4")

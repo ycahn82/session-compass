@@ -81,6 +81,11 @@ def main() -> None:
         action="store_true",
         help="Include sessions without verified resume evidence",
     )
+    parser.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Use each agent's native permission-bypass option when resuming",
+    )
     args = parser.parse_args()
 
     sessions = [session for adapter in get_adapters() for session in adapter.collect_sessions()]
@@ -121,7 +126,7 @@ def main() -> None:
     if not 1 <= choice <= len(sessions):
         print("Invalid selection.")
         return
-    resume_session(sessions[choice - 1])
+    resume_session(sessions[choice - 1], dangerous=args.dangerously_skip_permissions)
 
 
 if __name__ == "__main__":

@@ -79,7 +79,10 @@ class CopilotAdapter:
         return sessions
 
     def build_resume_command(self, session_id: str, dangerous: bool = False) -> list[str]:
-        return ["copilot", f"--resume={session_id}"]
+        command = ["copilot"]
+        if dangerous:
+            command.append("--allow-all")
+        return command + [f"--resume={session_id}"]
 
     def compatibility(self) -> AgentCompatibility:
         return AgentCompatibility(self.name, "1.0.82", "1.0.82", "1.0.82")

@@ -18,8 +18,8 @@
 | Task 2: service modules | completed | Commit `ac56788`; service modules, registry, and behavior-preserving CLI orchestration are isolated |
 | Task 3: resumability filtering | completed | Commit `acc6127`; 9-test suite PASS including Claude bridge-session, metadata-only, invalid Codex, and opt-in diagnostics |
 | Task 4: storage contracts | completed | Commit `357716b`; read-only schema checks pass for Claude, Codex, AGY, and Copilot |
-| Task 5: version floors | completed | Commit pending; verified floors and help capability fixtures are recorded |
-| Task 6: dangerous resume | pending | - |
+| Task 5: version floors | completed | Commit `bc64c58`; verified floors and help capability fixtures are recorded |
+| Task 6: dangerous resume | completed | Commit pending; native flags and CLI forwarding pass |
 | Task 7: compatibility probe | pending | - |
 | Task 8: GitHub Actions | pending | - |
 | Task 9: Issue automation | pending | - |
@@ -50,3 +50,7 @@
 - Task 4 committed as `357716b`.
 - Task 5 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src python -m unittest discover -s tests -v` -> 14 tests PASS.
 - Task 5 records conservative first-verified floors from local read-only `--version`/`--help` checks and official documentation links; no maximum version allowlist was added.
+- Task 5 committed as `bc64c58`.
+- Task 6 RED test confirmed all four adapters ignored `dangerous=True` before implementation.
+- Task 6 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src python -m unittest discover -s tests -v` -> 17 tests PASS.
+- Task 6 maps the common option to Claude/AGY `--dangerously-skip-permissions`, Codex `--dangerously-bypass-approvals-and-sandbox`, and Copilot `--allow-all`.
