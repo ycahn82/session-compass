@@ -117,7 +117,7 @@ README.md
 - Consumes: 현재 `collect_*_sessions()`와 `resume_session()` 함수
 - Produces: 모듈 이동 전후 비교에 사용할 session record와 command argument 기대값
 
-- [ ] **Step 1: 현재 데이터 형식을 재현하는 최소 fixture 테스트 작성**
+- [x] **Step 1: 현재 데이터 형식을 재현하는 최소 fixture 테스트 작성**
 
 Claude JSONL, Codex SQLite, Antigravity SQLite/history JSONL, Copilot SQLite를 `tempfile.TemporaryDirectory()` 안에 만들고 현재 collector가 반환하는 다음 필드를 검증한다.
 
@@ -128,7 +128,7 @@ assert expected_keys <= set(session)
 
 테스트는 실제 `$HOME`을 읽지 않도록 `cli.CLAUDE_PROJECTS_DIR`, `cli.CODEX_SESSIONS_DIR`, `cli.CODEX_INDEX_FILE`, `cli.AGY_CONVERSATIONS_DIR`, `cli.AGY_HISTORY_FILE`, `cli.AGY_METADATA_FILE`, `cli.COPILOT_DB_FILE`을 임시 경로로 patch한다.
 
-- [ ] **Step 2: 현재 resume command argument characterization test 작성**
+- [x] **Step 2: 현재 resume command argument characterization test 작성**
 
 `shutil.which`와 `subprocess.run`을 patch하고 네 agent에 대해 현재 command를 기록한다.
 
@@ -139,7 +139,7 @@ assert captured["agy"] == ["agy", "--conversation", "agy-id"]
 assert captured["copilot"] == ["copilot", "--resume=copilot-id"]
 ```
 
-- [ ] **Step 3: 테스트를 실행해 baseline을 확인**
+- [x] **Step 3: 테스트를 실행해 baseline을 확인**
 
 Run: `PYTHONPATH=src python -m unittest discover -s tests -v`
 
@@ -205,7 +205,7 @@ Python 3.9에서는 `str | None` 대신 `Optional[str]`을 사용한다.
 
 - [ ] **Step 3: 네 서비스 collector를 서비스별 파일로 이동**
 
-기존 함수의 parsing 순서, fallback 값, timestamp 변환, read-only SQLite connection을 그대로 유지한다. 각 모듈은 현재 `cli.py`의 서비스별 상수도 함께 소유한다.
+기존 함수의 parsing 순서, fallback 값, timestamp 변환, read-only SQLite connection을 그대로 유지한다. 각 모듈은 현재 `cli.py`의 서비스별 상수도 함께 소유한다. 모듈 이동 과정에서 SQLite connection은 명시적으로 close해 현재 baseline에서 관찰된 `ResourceWarning`을 제거한다.
 
 ```python
 class ClaudeAdapter:
