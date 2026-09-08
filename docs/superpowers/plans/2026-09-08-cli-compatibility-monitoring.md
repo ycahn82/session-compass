@@ -677,7 +677,7 @@ git commit -m "ci: report compatibility failures in stable issues"
 - Consumes: Task 5의 version floor와 Task 8-9의 workflow/Issue behavior
 - Produces: 사용자 설치·업데이트·지원 버전 문서와 release-ready verification result
 
-- [ ] **Step 1: README 사용 정책 작성**
+- [x] **Step 1: README 사용 정책 작성**
 
 다음 내용을 현재 Usage/How it works 섹션에 추가한다.
 
@@ -690,25 +690,25 @@ dangerous resume 관련 변경은 자동 수정하지 않고 GitHub Issue로 보
 
 agent별 실제 version floor, storage path, required schema를 표로 기록한다.
 
-- [ ] **Step 2: 전체 unit test 실행**
+- [x] **Step 2: 전체 unit test 실행**
 
 Run: `PYTHONPATH=src python -m unittest discover -s tests -v`
 
 Expected: characterization, service adapter, storage contract, compatibility probe, Issue payload 테스트가 모두 PASS한다.
 
-- [ ] **Step 3: package build 검증**
+- [x] **Step 3: package build 검증**
 
 Run: `python3 -m pip wheel --no-deps --no-build-isolation . -w /tmp/cli-sessions-wheel`
 
 Expected: wheel build가 성공하고 `src/cli_sessions/agents/` 패키지가 wheel에 포함된다.
 
-- [ ] **Step 4: CLI parser smoke 검증**
+- [x] **Step 4: CLI parser smoke 검증**
 
 Run: `PYTHONPATH=src python -m cli_sessions.cli --help`
 
 Expected: `--dangerously-skip-permissions`, `--claude`, `--codex`, `--agy`, `--copilot`가 help에 표시된다.
 
-- [ ] **Step 5: diff와 민감정보 점검**
+- [x] **Step 5: diff와 민감정보 점검**
 
 Run: `git diff --check` 그리고 `rg -n "API_KEY|TOKEN|session_id|prompt" README.md docs/superpowers .github scripts src tests`
 

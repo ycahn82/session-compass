@@ -22,8 +22,8 @@
 | Task 6: dangerous resume | completed | Commit `a00c445`; native flags and CLI forwarding pass |
 | Task 7: compatibility probe | completed | Commit `57670f4`; read-only probe, timeout handling, and report sanitization pass |
 | Task 8: GitHub Actions | completed | Commit `bbdf02a`; weekly workflow, artifact upload, and failure isolation are defined |
-| Task 9: Issue automation | completed | Commit pending; stable issue payloads, recovery comments, and always-run reporter are defined |
-| Task 10: README/final verification | pending | - |
+| Task 9: Issue automation | completed | Commit `0ec1f93`; stable issue payloads, recovery comments, and always-run reporter are defined |
+| Task 10: README/final verification | completed | Commit pending; tests, wheel, CLI help, workflow checks, and diff checks pass |
 
 ## Checkpoints
 
@@ -65,3 +65,7 @@
 - Task 9 RED tests confirmed the issue payload module was absent before implementation.
 - Task 9 verification: workflow reporter assertions and `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 24 tests PASS.
 - Task 9 reuses exact open issue titles, creates a new issue when an exact match is closed, comments recovery without auto-closing, and sends only sanitized report data.
+- Task 9 committed as `0ec1f93`.
+- Task 10 verification: 24 tests PASS with `ResourceWarning` treated as an error; CLI help shows all service filters plus both diagnostic options.
+- Task 10 package verification: wheel build succeeded in an isolated temporary venv after installing the missing `hatchling` build backend; wheel contains `cli_sessions/agents/` modules.
+- Task 10 sensitive-data scan found only intentional schema/test identifiers and documentation references; no actual secret, user prompt, session record, or absolute user path was added.
