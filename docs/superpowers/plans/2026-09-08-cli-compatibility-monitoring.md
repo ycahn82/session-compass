@@ -536,7 +536,7 @@ Run: `PYTHONPATH=src python -m unittest tests.test_compatibility_probe -v`
 
 Expected: 성공·실패·timeout·민감정보 제거 시나리오가 모두 PASS한다.
 
-- [ ] **Step 6: probe 구현을 커밋**
+- [x] **Step 6: probe 구현을 커밋**
 
 ```bash
 git add scripts tests/test_compatibility_probe.py
@@ -620,7 +620,7 @@ git commit -m "ci: check latest agent CLI compatibility weekly"
 - Consumes: Task 7의 sanitized report
 - Produces: agent와 문제 유형별 open Issue 재사용 및 comment payload
 
-- [ ] **Step 1: Issue key와 중복 정책 test fixture 작성**
+- [x] **Step 1: Issue key와 중복 정책 test fixture 작성**
 
 다음 title 규칙을 고정한다.
 
@@ -632,7 +632,7 @@ git commit -m "ci: check latest agent CLI compatibility weekly"
 
 실제 title은 report의 agent 값으로 다음 Python 형식으로 만든다: `f"[compat] {agent} {problem_type}"`. open Issue 검색은 생성된 exact title과 `is:issue is:open` 조건을 사용한다. 동일 title이 있으면 새 Issue를 생성하지 않는다.
 
-- [ ] **Step 2: GitHub API script 구현**
+- [x] **Step 2: GitHub API script 구현**
 
 `actions/github-script@v7`에서 report를 읽어 다음을 수행한다.
 
@@ -644,15 +644,15 @@ closed matching issue     -> create a new issue and link previous issue
 
 사용할 label은 `compatibility`, `automated-detection`, `agent:codex`와 같은 agent별 label이다. issue body/comment에는 artifact URL과 workflow run URL을 넣되 원본 전체 log는 넣지 않는다.
 
-- [ ] **Step 3: recovery comment 구현**
+- [x] **Step 3: recovery comment 구현**
 
 이전 실행에서 실패했고 현재 실행에서 정상으로 돌아오면 기존 Issue에 recovery comment를 추가한다. Issue를 자동 close하지 않는다.
 
-- [ ] **Step 4: workflow에 always-run report 단계 연결**
+- [x] **Step 4: workflow에 always-run report 단계 연결**
 
 probe가 실패해도 `if: ${{ always() }}`인 reporter 단계가 실행되도록 한다. GitHub token은 Issue 단계에만 전달하고, CLI 설치/probe subprocess에는 전달하지 않는다.
 
-- [ ] **Step 5: Issue payload sanitizer test 실행**
+- [x] **Step 5: Issue payload sanitizer test 실행**
 
 Run: `PYTHONPATH=src python -m unittest tests.test_issue_payload -v`
 

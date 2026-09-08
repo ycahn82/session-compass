@@ -21,8 +21,8 @@
 | Task 5: version floors | completed | Commit `bc64c58`; verified floors and help capability fixtures are recorded |
 | Task 6: dangerous resume | completed | Commit `a00c445`; native flags and CLI forwarding pass |
 | Task 7: compatibility probe | completed | Commit `57670f4`; read-only probe, timeout handling, and report sanitization pass |
-| Task 8: GitHub Actions | completed | Commit pending; weekly workflow, artifact upload, and failure isolation are defined |
-| Task 9: Issue automation | pending | - |
+| Task 8: GitHub Actions | completed | Commit `bbdf02a`; weekly workflow, artifact upload, and failure isolation are defined |
+| Task 9: Issue automation | completed | Commit pending; stable issue payloads, recovery comments, and always-run reporter are defined |
 | Task 10: README/final verification | pending | - |
 
 ## Checkpoints
@@ -61,3 +61,7 @@
 - Task 7 committed as `57670f4`.
 - Task 8 verification: workflow static assertions and the 21-test suite PASS.
 - Task 8 workflow uses Monday schedule plus manual dispatch, only `contents: read` and `issues: write`, always uploads sanitized artifacts, and fails after collecting all agent results.
+- Task 8 committed as `bbdf02a`.
+- Task 9 RED tests confirmed the issue payload module was absent before implementation.
+- Task 9 verification: workflow reporter assertions and `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src:. python -m unittest discover -s tests -v` -> 24 tests PASS.
+- Task 9 reuses exact open issue titles, creates a new issue when an exact match is closed, comments recovery without auto-closing, and sends only sanitized report data.
