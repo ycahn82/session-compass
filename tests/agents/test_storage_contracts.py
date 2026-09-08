@@ -4,11 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cli_sessions.agents.antigravity import AntigravityAdapter
-from cli_sessions.agents.base import ContractReport
-from cli_sessions.agents.claude import ClaudeAdapter
-from cli_sessions.agents.codex import CodexAdapter
-from cli_sessions.agents.copilot import CopilotAdapter
+from session_compass.agents.antigravity import AntigravityAdapter
+from session_compass.agents.base import ContractReport
+from session_compass.agents.claude import ClaudeAdapter
+from session_compass.agents.codex import CodexAdapter
+from session_compass.agents.copilot import CopilotAdapter
 
 
 class StorageContractTests(unittest.TestCase):

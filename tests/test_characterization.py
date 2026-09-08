@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
-from cli_sessions import cli
-from cli_sessions.agents import antigravity, claude, codex, copilot
+from session_compass import cli
+from session_compass.agents import antigravity, claude, codex, copilot
 
 
 class SessionCollectorCharacterizationTests(unittest.TestCase):

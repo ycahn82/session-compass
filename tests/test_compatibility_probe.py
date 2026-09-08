@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cli_sessions.agents.registry import get_adapter
+from session_compass.agents.registry import get_adapter
 from scripts.build_compatibility_report import sanitize_report
 from scripts.probe_cli_compatibility import probe_agent
 

@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-from cli_sessions.agents.base import AgentAdapter
-from cli_sessions.agents.registry import get_adapters
+from session_compass.agents.base import AgentAdapter
+from session_compass.agents.registry import get_adapters
 
 
 VERSION_RE = re.compile(r"(?<!\d)(\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)?)")
