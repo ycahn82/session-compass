@@ -31,6 +31,17 @@ Agent Compass는 Claude Code, Codex, Antigravity CLI, Copilot CLI가 로컬에 �
 
 ## 3. 변경 범위
 
+### 3.0 공개 문서 언어
+
+사용자와 PyPI가 직접 읽는 공개 문서는 모두 영어로 작성한다.
+
+- `README.md`: 전체 영어
+- `pyproject.toml`의 `description`, `keywords`, metadata 문구: 영어
+- PyPI에 표시되는 project description: README 기반의 영어 내용
+- CLI help와 사용자-facing error/message: 영어
+
+한국어는 내부 설계 문서, 구현 계획, 개발 메모에만 사용한다.
+
 ### 3.1 패키징과 실행 파일
 
 - `pyproject.toml`의 project name을 `agent-compass`로 변경한다.
@@ -131,4 +142,3 @@ README의 모든 사용 예시는 `sessions`가 아니라 `acompass`를 사용�
 - 중앙 session synchronization
 - GitHub repository archive
 - PyPI publish 자체의 자동 실행
-
