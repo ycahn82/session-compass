@@ -82,6 +82,7 @@ def main() -> None:
         help="Include sessions without verified resume evidence",
     )
     parser.add_argument(
+        "-d",
         "--dangerously-skip-permissions",
         action="store_true",
         help="Use each agent's native permission-bypass option when resuming",
