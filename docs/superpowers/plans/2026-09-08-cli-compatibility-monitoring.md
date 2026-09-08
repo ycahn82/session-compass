@@ -395,7 +395,7 @@ git commit -m "test: define per-agent session storage contracts"
 - Consumes: Task 4의 storage contract와 공개 release artifact
 - Produces: 각 adapter의 `AgentCompatibility`와 고정된 minimum help fixture
 
-- [ ] **Step 1: 공식 설치 채널과 release 목록을 조사**
+- [x] **Step 1: 공식 설치 채널과 release 목록을 조사**
 
 다음 공식 배포 경로를 기준으로 version artifact를 수집한다.
 
@@ -408,15 +408,15 @@ Antigravity:  https://antigravity.google/cli/install.sh
 
 조사 결과는 README에 링크로 기록한다. 인증이나 실제 model 호출 없이 `--version`과 `--help`를 실행할 수 있는 release만 대상으로 한다.
 
-- [ ] **Step 2: resume 최소 버전을 결정**
+- [x] **Step 2: resume 최소 버전을 결정**
 
 각 agent에서 과거 release 중 resume command, session ID 위치, dangerous native option이 동시에 검증되는 가장 오래된 버전을 선택한다. 과거 artifact를 재현할 수 없는 agent는 구현 시점에 재현 가능한 최초 release를 floor로 삼고, README에 “검증된 최초 버전”으로 명시한다. 현재 설치 버전은 `tested_latest_version`으로만 기록한다.
 
-- [ ] **Step 3: storage 최소 버전을 결정**
+- [x] **Step 3: storage 최소 버전을 결정**
 
 각 선택 release가 생성하는 session storage fixture가 Task 4의 required contract를 만족하는지 확인한다. resume command와 storage contract의 최초 통과 버전이 다르면 두 버전을 독립적으로 기록한다.
 
-- [ ] **Step 4: help fixture와 compatibility 테스트 작성**
+- [x] **Step 4: help fixture와 compatibility 테스트 작성**
 
 다음 정책을 테스트한다.
 
@@ -427,7 +427,7 @@ missing resume flag                             -> FAIL
 missing dangerous flag                          -> FAIL only for dangerous capability
 ```
 
-- [ ] **Step 5: 최소 버전과 storage contract를 README에 기록**
+- [x] **Step 5: 최소 버전과 storage contract를 README에 기록**
 
 README에 agent별 `resume_min_version`, `storage_min_version`, `tested_latest_version`의 의미와 업데이트 정책을 추가한다. 숫자는 Task 5에서 실제 release artifact와 fixture로 확인한 값만 기록한다.
 

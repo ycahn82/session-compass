@@ -17,8 +17,8 @@
 | Task 1: characterization tests | completed | Commit `f846c9a`; characterization baseline and resume command expectations are recorded |
 | Task 2: service modules | completed | Commit `ac56788`; service modules, registry, and behavior-preserving CLI orchestration are isolated |
 | Task 3: resumability filtering | completed | Commit `acc6127`; 9-test suite PASS including Claude bridge-session, metadata-only, invalid Codex, and opt-in diagnostics |
-| Task 4: storage contracts | completed | Commit pending; read-only schema checks pass for Claude, Codex, AGY, and Copilot |
-| Task 5: version floors | pending | - |
+| Task 4: storage contracts | completed | Commit `357716b`; read-only schema checks pass for Claude, Codex, AGY, and Copilot |
+| Task 5: version floors | completed | Commit pending; verified floors and help capability fixtures are recorded |
 | Task 6: dangerous resume | pending | - |
 | Task 7: compatibility probe | pending | - |
 | Task 8: GitHub Actions | pending | - |
@@ -47,3 +47,6 @@
 - Task 4 RED test confirmed `ContractReport` and adapter contract methods were absent before implementation.
 - Task 4 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src python -m unittest discover -s tests -v` -> 11 tests PASS with no resource warnings.
 - Task 4 uses temporary synthetic JSONL/SQLite schemas; all SQLite contract probes are read-only and explicitly close connections.
+- Task 4 committed as `357716b`.
+- Task 5 verification: `PYTHONWARNINGS=error::ResourceWarning PYTHONPATH=src python -m unittest discover -s tests -v` -> 14 tests PASS.
+- Task 5 records conservative first-verified floors from local read-only `--version`/`--help` checks and official documentation links; no maximum version allowlist was added.

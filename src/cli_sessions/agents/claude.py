@@ -80,7 +80,7 @@ class ClaudeAdapter:
         return ["claude", "--resume", session_id]
 
     def compatibility(self) -> AgentCompatibility:
-        return AgentCompatibility(self.name, "unknown", "unknown")
+        return AgentCompatibility(self.name, "2.1.263", "2.1.263", "2.1.263")
 
 
 ADAPTER: AgentAdapter = ClaudeAdapter()

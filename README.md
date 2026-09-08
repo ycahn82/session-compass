@@ -55,6 +55,7 @@ sessions --claude     # only Claude Code
 sessions --codex      # only Codex
 sessions --agy        # only Antigravity
 sessions --copilot    # only Copilot CLI
+sessions --include-unverified  # include records without verified resume evidence
 ```
 
 Pick a number to resume that session — `sessions` runs the right resume command (`claude --resume`, `codex resume`, `agy --conversation`, or `copilot --resume=`) in the session's original working directory.
@@ -69,6 +70,33 @@ Nothing is sent anywhere, and there's no telemetry. `sessions` only reads local 
 - Copilot CLI: `~/.copilot/session-store.db`
 
 Any tool you don't have installed is silently skipped — you only see entries for what's actually on your machine.
+
+## Supported CLI compatibility
+
+`cli-sessions` keeps each service integration in its own adapter. The version
+floor below is the first version verified in this repository with the current
+resume command and storage contract; it is a conservative support floor, not a
+claim that every older release is compatible.
+
+| Service | `resume_min_version` | `storage_min_version` | `tested_latest_version` | Official reference |
+|---|---:|---:|---:|---|
+| Claude Code | `2.1.263` | `2.1.263` | `2.1.263` | [CLI usage](https://docs.anthropic.com/en/docs/claude-code/cli-usage), [npm package](https://www.npmjs.com/package/@anthropic-ai/claude-code) |
+| Codex | `0.153.4` | `0.153.4` | `0.153.4` | [Codex CLI](https://developers.openai.com/codex/cli/), [npm package](https://www.npmjs.com/package/@openai/codex) |
+| Antigravity (`agy`) | `1.1.27` | `1.1.27` | `1.1.27` | [Using AGY CLI](https://antigravity.google/docs/cli/using/), [headless flags](https://antigravity.google/docs/cli/headless/) |
+| Copilot CLI | `1.0.82` | `1.0.82` | `1.0.82` | [CLI reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference), [npm package](https://www.npmjs.com/package/@github/copilot) |
+
+`tested_latest_version` is diagnostic only and will be refreshed by the weekly
+compatibility workflow. Newer service versions are not rejected by a maximum
+version allowlist. The workflow checks the required resume and native
+permission flags instead. If a service changes its CLI arguments or storage
+schema, maintainers update only that service's adapter and add a regression
+fixture; the workflow then reports the change without modifying user data.
+
+Users should update each service CLI independently when they choose. Updating a
+service does not update `cli-sessions` at runtime. The weekly maintainer check
+will detect supported capability changes and open or update a GitHub Issue when
+the adapter needs attention. Runtime never runs a service's `--help` probe or
+writes to its session database.
 
 ## Links
 

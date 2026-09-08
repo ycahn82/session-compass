@@ -82,7 +82,7 @@ class CopilotAdapter:
         return ["copilot", f"--resume={session_id}"]
 
     def compatibility(self) -> AgentCompatibility:
-        return AgentCompatibility(self.name, "unknown", "unknown")
+        return AgentCompatibility(self.name, "1.0.82", "1.0.82", "1.0.82")
 
 
 ADAPTER: AgentAdapter = CopilotAdapter()

@@ -97,6 +97,11 @@ def filter_resume_candidates(
     ]
 
 
+def validate_help_contract(help_text: str, required_flags: tuple[str, ...]) -> bool:
+    """Return whether all required capability markers are present in help text."""
+    return all(flag in help_text for flag in required_flags)
+
+
 def read_jsonl_lines(file: Path) -> list[dict[str, Any]]:
     """Return valid JSON object records from a JSON Lines file."""
     try:

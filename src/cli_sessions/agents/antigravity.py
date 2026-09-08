@@ -105,7 +105,7 @@ class AntigravityAdapter:
         return ["agy", "--conversation", session_id]
 
     def compatibility(self) -> AgentCompatibility:
-        return AgentCompatibility(self.name, "unknown", "unknown")
+        return AgentCompatibility(self.name, "1.1.27", "1.1.27", "1.1.27")
 
 
 ADAPTER: AgentAdapter = AntigravityAdapter()

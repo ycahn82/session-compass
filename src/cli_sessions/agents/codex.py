@@ -137,7 +137,7 @@ class CodexAdapter:
         return ["codex", "resume", session_id]
 
     def compatibility(self) -> AgentCompatibility:
-        return AgentCompatibility(self.name, "unknown", "unknown")
+        return AgentCompatibility(self.name, "0.153.4", "0.153.4", "0.153.4")
 
 
 ADAPTER: AgentAdapter = CodexAdapter()
