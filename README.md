@@ -56,7 +56,11 @@ sessions --codex      # only Codex
 sessions --agy        # only Antigravity
 sessions --copilot    # only Copilot CLI
 sessions --include-unverified  # include records without verified resume evidence
+sessions -d           # resume with each agent's native dangerous permission bypass
 ```
+
+`-d` is a short alias for `--dangerously-skip-permissions`. It applies the
+corresponding native permission-bypass option for the selected agent.
 
 Pick a number to resume that session — `sessions` runs the right resume command (`claude --resume`, `codex resume`, `agy --conversation`, or `copilot --resume=`) in the session's original working directory.
 
