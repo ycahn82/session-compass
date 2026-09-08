@@ -26,7 +26,7 @@
 ## 개발 브랜치와 실행 workspace
 
 - 기준 checkout은 `/home/ycahn/tools/cli-sessions`이다.
-- 현재 기준 branch는 `main`이며, 구현 기준 commit은 `daf4662`이다.
+- 현재 기준 branch는 `main`이며, 구현 기준 commit은 `84d98ba`이다.
 - `main`에서 직접 구현하지 않고 `feat/cli-compatibility-monitoring` branch를 만든다.
 - 구현 worktree는 `/home/ycahn/tools/cli-sessions-compatibility`로 만든다.
 - 모든 source, fixture, unit test, package build는 구현 worktree에서 실행한다.
