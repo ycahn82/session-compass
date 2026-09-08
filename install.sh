@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the `sessions` CLI (cli-sessions on PyPI).
+# Installs the `scompass` CLI (session-compass on PyPI).
 # Usage: curl -fsSL <raw-url-to-this-file> | bash
 
 set -euo pipefail
@@ -19,14 +19,14 @@ else
   PIPX_JUST_INSTALLED=0
 fi
 
-info "Installing cli-sessions via pipx..."
-python3 -m pipx install --force cli-sessions
+info "Installing session-compass via pipx..."
+python3 -m pipx install --force session-compass
 
-if command -v sessions >/dev/null 2>&1; then
-  info "Done. Run 'sessions' to get started."
+if command -v scompass >/dev/null 2>&1; then
+  info "Done. Run 'scompass' to get started."
 elif [ "$PIPX_JUST_INSTALLED" = "1" ]; then
   warn "pipx was just installed and updated your shell's PATH config, but this terminal session hasn't picked it up yet."
-  warn "Restart your terminal (or run 'exec \$SHELL -l'), then run: sessions"
+  warn "Restart your terminal (or run 'exec \$SHELL -l'), then run: scompass"
 else
-  warn "Installed, but 'sessions' isn't on PATH yet. Restart your terminal, or run: python3 -m pipx ensurepath && exec \$SHELL -l"
+  warn "Installed, but 'scompass' isn't on PATH yet. Restart your terminal, or run: python3 -m pipx ensurepath && exec \$SHELL -l"
 fi
