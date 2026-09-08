@@ -18,6 +18,18 @@ HOME = Path.home()
 CLAUDE_PROJECTS_DIR = HOME / ".claude" / "projects"
 
 
+def message_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content.strip()
+    if not isinstance(content, list):
+        return ""
+    parts = []
+    for item in content:
+        if isinstance(item, dict) and isinstance(item.get("text"), str):
+            parts.append(item["text"])
+    return " ".join(part.strip() for part in parts if part.strip()).strip()
+
+
 class ClaudeAdapter:
     name = "claude"
     executable = "claude"
@@ -44,6 +56,7 @@ class ClaudeAdapter:
                     continue
 
                 cwd = summary = None
+                user_summary = None
                 last_timestamp = None
                 has_conversation_content = False
                 has_bridge_record = False
@@ -52,11 +65,16 @@ class ClaudeAdapter:
                     cwd = cwd or entry.get("cwd")
                     message = entry.get("message") or {}
                     content = message.get("content") if isinstance(message, dict) else None
-                    if entry.get("type") in {"user", "assistant"} and content:
+                    text = message_text(content)
+                    if entry.get("type") in {"user", "assistant"} and text:
                         has_conversation_content = True
-                    if not summary and entry.get("type") == "user" and isinstance(content, str) and content.strip():
-                        summary = content
+                    if not user_summary and entry.get("type") == "user" and text:
+                        user_summary = text
+                    if entry.get("type") == "summary" and isinstance(entry.get("summary"), str):
+                        summary = entry["summary"].strip() or summary
                     last_timestamp = entry.get("timestamp") or last_timestamp
+
+                summary = summary or user_summary
 
                 fallback_cwd = "/" + project_dir.name.lstrip("-").replace("-", "/")
                 session = {
