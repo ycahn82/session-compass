@@ -21,6 +21,11 @@ classifiers = [
     "Topic :: Utilities",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ycahn82/session-compass"
+Repository = "https://github.com/ycahn82/session-compass"
+Issues = "https://github.com/ycahn82/session-compass/issues"
+
 [project.scripts]
 scompass = "session_compass.cli:main"
 
