@@ -65,7 +65,32 @@ class AntigravityMetadataTests(unittest.TestCase):
         self._write_conversation("user-with-preview")
         self._write_conversation("internal-session")
         self._write_conversation("uncatalogued-session")
-        self.history.write_text("", encoding="utf-8")
+        self._write_conversation("uncatalogued-no-workspace")
+        history_lines = [
+            {
+                "display": "새 대화를 시작합니다.",
+                "timestamp": 1,
+                "workspace": "/home/first-message-has-no-id",
+            },
+            {
+                "display": "/rename brand new chat",
+                "timestamp": 2,
+                "workspace": "/tmp/uncatalogued-workspace",
+                "conversationId": "uncatalogued-session",
+                "type": "slash_command",
+            },
+            {
+                "display": "/exit",
+                "timestamp": 3,
+                "workspace": "/tmp/uncatalogued-workspace",
+                "conversationId": "uncatalogued-session",
+                "type": "slash_command",
+            },
+        ]
+        self.history.write_text(
+            "\n".join(json.dumps(line) for line in history_lines) + "\n",
+            encoding="utf-8",
+        )
         self.metadata.write_text(
             json.dumps(
                 {
@@ -106,11 +131,35 @@ class AntigravityMetadataTests(unittest.TestCase):
         self.assertEqual(by_id["user-with-title"]["summary"], "UI chat title")
         self.assertEqual(by_id["user-with-preview"]["summary"], "Preview fallback")
 
-    def test_internal_and_uncatalogued_sessions_are_excluded(self):
+    def test_internal_sessions_are_excluded(self):
         ids = {session["id"] for session in antigravity.AntigravityAdapter().collect_sessions()}
 
         self.assertNotIn("internal-session", ids)
-        self.assertNotIn("uncatalogued-session", ids)
+
+    def test_uncatalogued_session_falls_back_to_history_workspace(self):
+        """Antigravity's UI catalog is populated asynchronously and lags behind brand-new
+        sessions. A session must still show up (using history.jsonl as a fallback) instead
+        of being silently dropped while the catalog catches up."""
+        sessions = antigravity.AntigravityAdapter().collect_sessions()
+        by_id = {session["id"]: session for session in sessions}
+
+        self.assertIn("uncatalogued-session", by_id)
+        self.assertEqual(by_id["uncatalogued-session"]["cwd"], "/tmp/uncatalogued-workspace")
+
+    def test_opening_turn_without_a_conversation_id_is_attributed_retroactively(self):
+        """Antigravity only tags a history.jsonl entry with its conversationId once the id
+        has been assigned, so a session's very first turn(s) are logged without one. Once a
+        later turn in the same session (e.g. /rename or /exit) carries the id, the earlier,
+        untagged turns must be attributed back to it instead of being dropped."""
+        sessions = antigravity.AntigravityAdapter().collect_sessions()
+        by_id = {session["id"]: session for session in sessions}
+
+        self.assertEqual(by_id["uncatalogued-session"]["summary"], "새 대화를 시작합니다.")
+
+    def test_uncatalogued_session_without_any_workspace_is_excluded(self):
+        ids = {session["id"] for session in antigravity.AntigravityAdapter().collect_sessions()}
+
+        self.assertNotIn("uncatalogued-no-workspace", ids)
 
     def test_visible_sessions_have_summary_and_workspace(self):
         for session in antigravity.AntigravityAdapter().collect_sessions():
