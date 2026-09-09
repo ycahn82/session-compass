@@ -103,12 +103,7 @@ class AntigravityAdapter:
         if not AGY_CONVERSATIONS_DIR.is_dir():
             return sessions
 
-        from_history: dict[str, dict[str, Any]] = {}
-        for entry in read_jsonl_lines(AGY_HISTORY_FILE):
-            conversation_id = entry.get("conversationId")
-            if not conversation_id:
-                continue
-            record = from_history.setdefault(str(conversation_id), {})
+        def apply_history_entry(record: dict[str, Any], entry: dict[str, Any]) -> None:
             if entry.get("workspace"):
                 record["workspace"] = entry["workspace"]
             if entry.get("type") != "slash_command" and str(entry.get("display", "")).strip():
@@ -117,6 +112,23 @@ class AntigravityAdapter:
             if timestamp and (not record.get("last_active") or timestamp > record["last_active"]):
                 record["last_active"] = timestamp
 
+        from_history: dict[str, dict[str, Any]] = {}
+        # Antigravity only tags a history.jsonl entry with its conversationId once the
+        # id has been assigned, so a session's opening turn(s) are logged without one.
+        # Buffer those and attribute them retroactively once the id shows up on a later
+        # turn (e.g. /rename or /exit) in the same session.
+        pending_untagged_entries: list[dict[str, Any]] = []
+        for entry in read_jsonl_lines(AGY_HISTORY_FILE):
+            conversation_id = entry.get("conversationId")
+            if not conversation_id:
+                pending_untagged_entries.append(entry)
+                continue
+            record = from_history.setdefault(str(conversation_id), {})
+            for pending_entry in pending_untagged_entries:
+                apply_history_entry(record, pending_entry)
+            pending_untagged_entries.clear()
+            apply_history_entry(record, entry)
+
         metadata = read_conversation_metadata(AGY_METADATA_FILE)
         catalog = read_summary_catalog(AGY_SUMMARIES_DB)
 
@@ -124,23 +136,41 @@ class AntigravityAdapter:
             if count_steps(db_file) == 0:
                 continue
             session_id = db_file.stem
-            catalog_record = catalog.get(session_id)
-            if not catalog_record or metadata.get(session_id, {}).get("is_internal") is True:
+            if metadata.get(session_id, {}).get("is_internal") is True:
                 continue
+            # Antigravity's UI catalog (conversation_summaries.db) is populated
+            # asynchronously and can lag well behind a brand-new session, so a
+            # missing catalog_record must not drop the session outright -
+            # fall back to history.jsonl, which is written synchronously.
+            catalog_record = catalog.get(session_id)
             history = from_history.get(session_id, {})
-            workspace_uris = catalog_record["workspace_uris"]
+            workspace_uris = catalog_record["workspace_uris"] if catalog_record else []
             cwd = (
                 workspace_uris[0].removeprefix("file://") if workspace_uris else None
             ) or history.get("workspace")
+            if not cwd:
+                continue
             last_active = (
                 parse_timestamp(
-                    history.get("last_active") or catalog_record.get("last_modified_time")
+                    history.get("last_active")
+                    or (catalog_record.get("last_modified_time") if catalog_record else None)
                 )
                 or file_mtime(db_file)
             )
-            summary = catalog_record["title"] or catalog_record["preview"]
-            if not summary or not cwd:
-                continue
+            catalog_title = catalog_record["title"] if catalog_record else ""
+            catalog_preview = catalog_record["preview"] if catalog_record else ""
+            summary = (
+                catalog_title or catalog_preview or history.get("summary") or "(no summary available)"
+            )
+            summary_source = (
+                "catalog_title"
+                if catalog_title
+                else "catalog_preview"
+                if catalog_preview
+                else "history_summary"
+                if history.get("summary")
+                else "fallback"
+            )
             session = {
                 "tool": self.name,
                 "id": session_id,
@@ -149,7 +179,7 @@ class AntigravityAdapter:
                 "last_active": last_active,
                 "record_kind": "conversation",
                 "has_conversation_content": True,
-                "summary_source": "catalog_title" if catalog_record["title"] else "catalog_preview",
+                "summary_source": summary_source,
                 "workspace_source": "catalog_workspace_uri" if workspace_uris else "history_workspace",
             }
             session["resume_status"] = classify_resumability(session).value
